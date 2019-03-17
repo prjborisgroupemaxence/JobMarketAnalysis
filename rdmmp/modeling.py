@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 """
 Created on Tue Mar 12 12:22:58 2019
 
@@ -6,6 +7,7 @@ Script file for the ML part
 
 @authors: Radia, David, Martial, Maxence, Philippe B
 """
+
 
 def modelize(df):
     """
@@ -21,5 +23,3 @@ def modelize(df):
     Raises:
         KeyError: Raises an exception.
     """
-
-    pass

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 """
 Created on Tue Mar 12 12:22:59 2019
 

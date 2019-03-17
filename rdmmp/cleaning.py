@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 """
 Created on Tue Mar 12 12:22:58 2019
 
@@ -6,6 +7,7 @@ Code to clean the dataframe, to get useful data from posting column
 
 @authors: Radia, David, Martial, Maxence, Philippe B
 """
+
 
 def clean(df):
     """
@@ -21,4 +23,3 @@ def clean(df):
     Raises:
         KeyError: Raises an exception.
     """
-    pass
