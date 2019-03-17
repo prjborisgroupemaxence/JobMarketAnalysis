@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 """
 Created on Tue Mar  5 11:38:08 2019
 
@@ -17,9 +18,10 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 import pandas as pd
 import numpy as np
-from pygame import mixer #pour jouer un son dans python
+from pygame import mixer    # pour jouer un son dans python
 
 import rdmmp.misc as misc
+
 
 def generate_number_delay():
     """
@@ -41,6 +43,7 @@ def play_mp3(sound):
     mixer.music.load(sound)
     mixer.music.play()
 
+
 def get_soup(url):
     """
     Given the url of a page, this function returns the soup object.
@@ -58,7 +61,6 @@ def get_soup(url):
     driver.close()
 
     return soup
-
 
 
 def grab_job_links(soup):
@@ -86,6 +88,7 @@ def grab_job_links(soup):
 
     return urls
 
+
 def grab_sponsored_job_links(soup):
     """
     Grab all sponsored job posting links from a Indeed search result page using the given soup object
@@ -110,6 +113,7 @@ def grab_sponsored_job_links(soup):
         sponsored_urls.append(url)
 
     return sponsored_urls
+
 
 def get_urls(query, num_pages, location):
     """
@@ -157,9 +161,10 @@ def get_urls(query, num_pages, location):
                 continue
 
     # Check to ensure the number of urls gotten is correct
-    #assert len(urls) == num_pages * 10, "There are missing job links, check code!"
+    # assert len(urls) == num_pages * 10, "There are missing job links, check code!"
 
     return urls, sponsored_urls
+
 
 def get_posting(url):
     """
@@ -241,7 +246,7 @@ def get_location(soup):
     """
     try:
         soupcity = soup.find(name='div', attrs={'class': "jobsearch-InlineCompanyRating icl-u-xs-mt--xs jobsearch-DesktopStickyContainer-companyrating"})
-        city = soupcity.find(name='div', attrs={"class":""}).getText()
+        city = soupcity.find(name='div', attrs={"class": ""}).getText()
     except:
         city = np.nan
 
@@ -278,6 +283,7 @@ def get_posted(soup):
 
     return posted_date
 
+
 def get_job_ad_data(url_lst, data):
     """
     Get the data of job postings for a list of urls from a given soup object
@@ -298,7 +304,7 @@ def get_job_ad_data(url_lst, data):
             city = get_location(soup)
             posted_date = get_posted(soup)
 
-            data = data.append({'Title':title, "City":city, "Url":url, "Posted_Date":posted_date, "Salary":salary, "Company":company, "Posting":posting}, ignore_index=True)
+            data = data.append({'Title': title, "City": city, "Url": url, "Posted_Date": posted_date, "Salary": salary, "Company": company, "Posting": posting}, ignore_index=True)
         except:
             continue
 
@@ -357,7 +363,7 @@ def get_data(query, num_pages, location):
         print('\n{} postings after removing duplicates !'.format(jobs_df.shape[0]))
 
         # Save the dict as csv file
-        file_name = misc.CSV_DIR + '/' + query.replace('+', '_')+ '_' + location.lower() + '.csv'
+        file_name = misc.CFG.csv_dir + '/' + query.replace('+', '_') + '_' + location.lower() + '.csv'
         jobs_df.to_csv(file_name, encoding='utf-8', index=False)
 
         print('All {} postings have been scraped and saved!'.format(jobs_df.shape[0]))
@@ -366,10 +372,12 @@ def get_data(query, num_pages, location):
 
     return jobs_df
 
-#%% Main if used alone
+# %% Main if used alone
 # If script is run directly, we'll take input from the user
+
+
 if __name__ == "__main__":
-    QUERIES = ["data scientist", "machine learning engineer", "data engineer", "developpeur"]
+    QUERIES = misc.CFG.targets
 
     while True:
         QUERY = input("Please enter the title to scrape data for: \n").lower()
@@ -383,9 +391,8 @@ if __name__ == "__main__":
         try:
             PAGES = int(NUM_PAGES)
             break
-        except:
+        except ValueError:
             print("Invalid number of pages! Please try again.")
 
     get_data(QUERY, PAGES, location='Lyon')
-
-    SCRAP = pd.read_csv("data_scientist_lyon.csv", encoding='utf-8', index_col=0)
+    SCRAP = pd.read_csv(QUERY, encoding='utf-8', index_col=0)

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 """
 Created on Tue Mar  5 10:25:35 2019
 
@@ -7,14 +8,13 @@ Created on Tue Mar  5 10:25:35 2019
 
 import sys
 
-import pandas as pd
-
 import rdmmp.scraping as scraping
 import rdmmp.db as db
 import rdmmp.cleaning as cleaning
 import rdmmp.modeling as modeling
 import rdmmp.reporting as reporting
 import rdmmp.misc as misc
+
 
 def test():
     """
@@ -31,7 +31,9 @@ def test():
         KeyError: Raises an exception.
     """
 
-#%% DoScraping
+# %% DoScraping
+
+
 def do_scraping(automatic):
     """ Handle the data scraping on Indeed
 
@@ -63,7 +65,7 @@ def do_scraping(automatic):
                 try:
                     num_pages = int(num_pages)
                     break
-                except:
+                except ValueError:
                     print("Invalid number of pages! Please try again.")
 
             # Scrap inputs
@@ -75,9 +77,8 @@ def do_scraping(automatic):
 
     if automatic:
         # Init job and location lists
-        jobs = ["data scientist", "data analyst", "business intelligence", "developpeur"]
-        #locations = ["Lyon", "Toulouse", "Nantes", "Bordeaux", "Paris"]
-        locations = ["Toulouse", "Nantes", "Bordeaux", "Paris"]
+        jobs = misc.CFG.targets
+        locations = misc.CFG.locations
 
         # Scrap
         for location in locations:
@@ -85,43 +86,84 @@ def do_scraping(automatic):
                 print("\nScraping {} in {}...\n".format(job, location))
                 scraping.get_data(job, -1, location)
 
-#%% GetWorkingData
+# %% GetWorkingData
+
+
 def get_working_data():
+    """
+    Combine data from CSV and mongoDB
+
+    Returns:
+        A pandas dataframe
+    """
     print("\n****************************************")
     print("*** get_working_data")
     print("****************************************")
     return db.import_data()
 
-#%% Cleaner
-def do_cleaning(df):
+# %% Cleaner
+
+
+def do_cleaning(data):
+    """
+    Clean the data to be used in the model
+
+    Args:
+        data: pandas dataframe to clean
+    """
     print("\n****************************************")
     print("*** do_cleaning")
     print("****************************************")
-    cleaning.clean(df)
+    cleaning.clean(data)
 
-#%% DoModel
-def make_model(df):
+# %% DoModel
+
+
+def make_model(data):
+    """
+    Fit the model on the data and predict salary when it's unknown
+
+    Args:
+        data: pandas dataframe to train and predict our model on
+    """
     print("\n****************************************")
     print("*** make_model")
     print("****************************************")
-    modeling.modelize(df)
+    modeling.modelize(data)
 
-#%% UpdateDB
-def update_db(df):
+# %% UpdateDB
+
+
+def update_db(data):
+    """
+    Save the data in the DB
+
+    Args:
+        data: pandas dataframe to be saved in mongoDB
+    """
     print("\n****************************************")
     print("*** update_db")
     print("****************************************")
-    db.update(df)
+    db.update(data)
 
-#%% Report
-def make_report(df):
+# %% Report
+
+
+def make_report(data):
+    """
+    Create a report and send it by email
+
+    Args:
+        data: pandas dataframe, maybe not useful
+    """
     print("\n****************************************")
     print("*** make_report")
     print("****************************************")
-    reporting.report(df)
+    reporting.report(data)
 
-#%% Code principal
-    
+# %% Code principal
+
+
 def handle_options():
     """
     Define default options for a complete and automatic process
@@ -144,19 +186,21 @@ def handle_options():
     model = True
     update = True
     report = True
-    
+
     print(sys.argv)
     if sys.argv:
         # there are command line arguments, we must handle them
-        for a in sys.argv:
-            if a == '-noScrap':
+        for arg in sys.argv:
+            if arg == '-auto':
+                auto = True
+            elif arg == '-noScrap':
                 scrap = False
-            elif a == '-noReport':
+            elif arg == '-noReport':
                 report = False
-            
+
     return auto, scrap, working_data, cleaner, model, update, report
-    
-    
+
+
 def main():
     """
     Main function
@@ -168,8 +212,9 @@ def main():
 
     auto, scrap, working_data, cleaner, model, update, report = handle_options()
 
-    # Check if necessary directories exist
-    misc.ensure_dir()
+    # Read config data and check if needed folders exist
+    misc.CFG.read_ini()
+    misc.CFG.ensure_folders_exist()
 
     if scrap:
         # Scrap
@@ -199,5 +244,7 @@ def main():
     print("Main End")
     print("================================================================================")
 
-#%% Point d'entrée unique du script
+# %% Point d'entrée unique du script
+
+
 main()

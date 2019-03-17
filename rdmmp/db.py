@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 """
 Created on Tue Mar 12 12:22:57 2019
 
@@ -27,7 +28,6 @@ def update(drf):
         KeyError: Raises an exception.
     """
 
-    pass
 
 def import_data_from_csv(folderpath, jobs, locations):
     """
@@ -45,14 +45,14 @@ def import_data_from_csv(folderpath, jobs, locations):
     alldata = pd.DataFrame()
     for job in jobs:
         for loc in locations:
-            filepath = folderpath + '/' + job.lower().replace(' ', '_') + '_' + loc.lower() + '.csv'
+            filepath = folderpath.joinpath(job.lower().replace(' ', '_') + '_' + loc.lower() + '.csv')
             try:
                 temp = pd.read_csv(filepath, encoding='utf-8')
-                
-                # backward compatibility : 
+
+                # backward compatibility :
                 if temp.shape[1] == 8:
                     temp.drop(temp.columns[0], axis=1, inplace=True)
-                    
+
                 alldata = alldata.append(temp, ignore_index=True)
             except:
                 print("Error reading {}...".format(filepath))
@@ -60,6 +60,7 @@ def import_data_from_csv(folderpath, jobs, locations):
     alldata.drop_duplicates(inplace=True)
 
     return alldata
+
 
 def import_data():
     """
@@ -76,7 +77,4 @@ def import_data():
         KeyError: Raises an exception.
     """
 
-    jobs = ['Data Scientist', 'Developpeur', 'Business Intelligence', 'Data Analyst']
-    locations = ['Lyon', 'Paris', 'Toulouse', 'Bordeaux', 'Nantes']
-
-    return import_data_from_csv(misc.CSV_DIR, jobs, locations)
+    return import_data_from_csv(misc.CFG.csv_dir, misc.CFG.targets, misc.CFG.locations)
