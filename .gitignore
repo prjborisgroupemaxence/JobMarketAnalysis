@@ -12,6 +12,9 @@ report/
 # Log from scraping 
 geckodriver.log
 
+# INI Files
+*.ini
+
 ## Examples from Visual Studio
 # User-specific files
 #*.suo
