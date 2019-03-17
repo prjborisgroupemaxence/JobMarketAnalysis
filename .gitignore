@@ -6,8 +6,7 @@
 __pycache__/
 
 # Folders with temporary working files
-csv/
-csv1/
+csv*/
 report/
 
 # Log from scraping 
