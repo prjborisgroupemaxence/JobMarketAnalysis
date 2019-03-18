@@ -7,13 +7,15 @@ Code to clean the dataframe, to get useful data from posting column
 
 @authors: Radia, David, Martial, Maxence, Philippe B
 """
+import re
 import pandas as pd
 import numpy as np
-import re
+
 
 # Start by cleaning the job title column
-def clean_job(data, jobtitle=['Data Analyst', 'Data Scientist', 'Junior', 'Stage', 'Business Analyst', 'Data Engineer',
-                        'Ingénieur Data', 'Alternance', 'Développeur']):
+def clean_job(data, jobtitle=['Data Analyst', 'Data Scientist', 'Junior',
+                              'Stage', 'Business Analyst', 'Data Engineer',
+                              'Ingénieur Data', 'Alternance', 'Développeur']):
     """
     Create a new column with job title clean and ready to use by a ML model
 
@@ -25,7 +27,7 @@ def clean_job(data, jobtitle=['Data Analyst', 'Data Scientist', 'Junior', 'Stage
         data : a dataframe with a new clean column title
     """
 
-    fulldata['CleanJob'] = " "  # Create new column
+    data['CleanJob'] = " "  # Create new column
 
     for i, dirtytitle in enumerate(data['Title']):
 
@@ -36,11 +38,12 @@ def clean_job(data, jobtitle=['Data Analyst', 'Data Scientist', 'Junior', 'Stage
 
             if clean_title in dirtytitle:
                 # add all key title in CleanJob column
-                fulldata['CleanJob'][i] += clean_title + " "
+                data['CleanJob'][i] += clean_title + " "
             else:
                 pass
 
     return data
+
 
 # Clean salary column
 def clean_salary(data):
@@ -102,16 +105,19 @@ def clean_salary(data):
 
     return data
 
+
 # Clean City column
 def clean_city(data):
     """
-    Create a new column with city clean (CleanCity) and ready to use by a ML model
+    Create a new column with city clean (CleanCity) and ready to use by a ML
+    model
 
     Parameter:
         data : dataframe with a City column to process
 
     Returns:
-        data : a dataframe with a new clean column city (we take the mean for a range salary)
+        data : a dataframe with a new clean column city
+        (we take the mean for a range salary)
 
     """
     pd.options.mode.chained_assignment = None  # default='warn'
@@ -127,7 +133,7 @@ def clean_city(data):
 
     data['CleanCity'] = 'nan'
 
-    for i, city in enumerate(fulldata['City']):
+    for i, city in enumerate(data['City']):
         for key, value in dpt.items():
 
             # Start by check if the city contains a key name city
@@ -143,20 +149,21 @@ def clean_city(data):
 
     return data
 
+
 # Clean Posting column
 def clean_posting(data):
     """
-        Create a new column with city clean (CleanCity) and ready to use by a ML model
+        Create a new column with city clean (CleanCity) and ready to use by a
+        ML model
 
         Parameter:
             data : dataframe with a posting column to process
 
         Returns:
-            data : a dataframe with a new clean posting column  (Named CleanPosting)
+            data : a dataframe with a new clean posting column
+            (Named CleanPosting)
 
     """
-
-
     return data
 
 
@@ -169,14 +176,15 @@ def clean(data):
         data : dataframe with Title, City, Salary, Posting columns to process
 
     Returns:
-        cleanData : a dataframe with only columns clean
+        data_clean : a dataframe with only columns clean
 
     """
-    cleanJob = clean_job(data)
-    cleanCity = clean_city(data)
-    cleanSalary = clean_salary(data)
-    # cleanPosting = clean_posting(data)
+    data_clean_job = clean_job(data)
+    data_clean_city = clean_city(data)
+    data_clean_salary = clean_salary(data)
+    # data_clean_posting = clean_posting(data)
 
-    cleanData = pd.concat([cleanJob['CleanJob'], cleanCity['CleanCity'], cleanSalary['CleanSalary']], axis=1,
+    data_clean = pd.concat([data_clean_job['CleanJob'], data_clean_city['CleanCity'],
+                           data_clean_salary['CleanSalary']], axis=1,
                           keys=['Job', 'City', 'Salary'])
-    return cleanData
+    return data_clean
