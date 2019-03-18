@@ -15,6 +15,9 @@ geckodriver.log
 # INI Files
 *.ini
 
+# Notes file
+Notes.txt
+
 ## Examples from Visual Studio
 # User-specific files
 #*.suo

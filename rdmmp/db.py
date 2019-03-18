@@ -45,17 +45,37 @@ def import_data_from_csv(folderpath, jobs, locations):
     alldata = pd.DataFrame()
     for job in jobs:
         for loc in locations:
-            filepath = folderpath.joinpath(job.lower().replace(' ', '_') + '_' + loc.lower() + '.csv')
-            try:
-                temp = pd.read_csv(filepath, encoding='utf-8')
-
-                # backward compatibility :
-                if temp.shape[1] == 8:
-                    temp.drop(temp.columns[0], axis=1, inplace=True)
-
-                alldata = alldata.append(temp, ignore_index=True)
-            except:
-                print("Error reading {}...".format(filepath))
+            for i in range(2):
+                if i == 0:
+                    filepath = folderpath.joinpath(job.lower().replace(' ', '_') + '_' + loc.lower() + '.csv')
+                else:
+                    filepath = folderpath.joinpath(job.lower().replace(' ', '_') + '_' + loc.lower() + str(i) + '.csv')
+                    
+                try:
+                    temp = pd.read_csv(filepath, encoding='utf-8')
+    
+                    # backward compatibility :
+                    if temp.shape[1] == 8:
+                        temp.drop(temp.columns[0], axis=1, inplace=True)
+                        
+                    temp['Job_Category'] = job
+                    temp['Location_Category'] = loc
+    
+                    alldata = alldata.append(temp, ignore_index=True)
+                except:
+                    print("Error reading {}...".format(filepath))
+            
+#            filepath = folderpath.joinpath(job.lower().replace(' ', '_') + '_' + loc.lower() + '.csv')
+#            try:
+#                temp = pd.read_csv(filepath, encoding='utf-8')
+#
+#                # backward compatibility :
+#                if temp.shape[1] == 8:
+#                    temp.drop(temp.columns[0], axis=1, inplace=True)
+#
+#                alldata = alldata.append(temp, ignore_index=True)
+#            except:
+#                print("Error reading {}...".format(filepath))
 
     alldata.drop_duplicates(inplace=True)
 
