@@ -25,7 +25,8 @@ LOCATIONS_VALUE = 'Locations'
 
 EMAIL_SECTION = 'EMAIL'
 ADDRESS_VALUE = 'Address'
-PASSWORD_VALUE = 'Password'
+SMTP_USER_VALUE = 'User'
+SMTP_PASSWORD_VALUE = 'Password'
 
 # %% Class ConfigValues
 
@@ -41,12 +42,13 @@ class ConfigValues:
         Init the object
         """
         self.script_dir = Path(__file__).parents[1]
-        self.csv_dir = ''
-        self.report_dir = ''
+        self.csv_dir = Path()
+        self.report_dir = Path()
         self.targets = []
         self.locations = []
         self.email = ''
-        self.pwd = ''
+        self.smtp_user = ''
+        self.smtp_pwd = ''
 
     def create_default_ini(self):
         """
@@ -57,12 +59,13 @@ class ConfigValues:
         config[FOLDERS_SECTION] = {SCRAPING_OUTPUT_VALUE: 'CSV', REPORTING_INPUT_VALUE: 'Report'}
 
         config[TARGETS_SECTION] = {}
-        config[TARGETS_SECTION][JOBS_VALUE] = '\nData Scientist\nData Analyst\nBusiness Intelligence\nDéveloppeur'
+        config[TARGETS_SECTION][JOBS_VALUE] = '\nData Scientist\nData Analyst\nBusiness Intelligence\nDeveloppeur'
         config[TARGETS_SECTION][LOCATIONS_VALUE] = '\nLyon\nToulouse\nNantes\nBordeaux\nParis'
 
         config[EMAIL_SECTION] = {}
         config[EMAIL_SECTION][ADDRESS_VALUE] = 'groupeMaxence@gmail.com'
-        config[EMAIL_SECTION][PASSWORD_VALUE] = ''
+        config[EMAIL_SECTION][SMTP_USER_VALUE] = 'groupeMaxence'
+        config[EMAIL_SECTION][SMTP_PASSWORD_VALUE] = ''
 
         with open(self.script_dir.joinpath(INI_FILE), 'w') as configfile:
             config.write(configfile)
@@ -85,10 +88,10 @@ class ConfigValues:
 
         # FOLDERS
         dir_name = config[FOLDERS_SECTION][SCRAPING_OUTPUT_VALUE]
-        self.csv_dir = self.script_dir.joinpath(dir_name)
+        self.csv_dir = Path(self.script_dir.joinpath(dir_name))
 
         dir_name = config[FOLDERS_SECTION][REPORTING_INPUT_VALUE]
-        self.report_dir = self.script_dir.joinpath(dir_name)
+        self.report_dir = Path(self.script_dir.joinpath(dir_name))
 
         # TARGETS
         targets = config[TARGETS_SECTION][JOBS_VALUE].splitlines()
@@ -99,7 +102,8 @@ class ConfigValues:
 
         # EMAIL
         self.email = config[EMAIL_SECTION][ADDRESS_VALUE]
-        self.pwd = config[EMAIL_SECTION][PASSWORD_VALUE]
+        self.smtp_user = config[EMAIL_SECTION][SMTP_USER_VALUE]
+        self.smtp_pwd = config[EMAIL_SECTION][SMTP_PASSWORD_VALUE]
 
     def ensure_folders_exist(self):
         """
