@@ -16,11 +16,14 @@ import numpy as np
 def clean_job(data, jobtitle=['Data Analyst', 'Data Scientist', 'Junior',
                               'Stage', 'Business Analyst', 'Data Engineer',
                               'Ingénieur Data', 'Alternance', 'Développeur']):
+
     """
     Create a new column with job title clean and ready to use by a ML model
 
     Parameter:
-        jobtitle: list of job (ex: jobtitle = ['Data Analyst', 'Data Scientist', 'Junior', 'Stage', 'Business Analyst', 'Data Engineer', 'Ingénieur Data', 'Alternance', 'Développeur'])
+        jobtitle: list of job (ex: jobtitle = ['Data Analyst', 'Data Scientist'
+        , 'Junior', 'Stage', 'Business Analyst', 'Data Engineer',
+        'Ingénieur Data', 'Alternance', 'Développeur'])
         data : dataframe with a Title column to process
 
     Returns:
@@ -183,8 +186,8 @@ def clean(data):
     data_clean_city = clean_city(data)
     data_clean_salary = clean_salary(data)
     # data_clean_posting = clean_posting(data)
-
-    data_clean = pd.concat([data_clean_job['CleanJob'], data_clean_city['CleanCity'],
-                           data_clean_salary['CleanSalary']], axis=1,
-                          keys=['Job', 'City', 'Salary'])
+    data_clean = pd.concat([data_clean_job['CleanJob'],
+                            data_clean_city['CleanCity'],
+                            data_clean_salary['CleanSalary']], axis=1,
+                           keys=['Job', 'City', 'Salary'])
     return data_clean
