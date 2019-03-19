@@ -1,7 +1,7 @@
 # JobMarketAnalysis
 Using Indeed and Machine Learning to do a quick Job Market Analysis 
 
-## Project title
+## Job Market ANalysis Indeed
 A little info about your project and/ or overview that explains **what** the project is about.
 
 ## Motivation
