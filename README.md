@@ -1,11 +1,11 @@
 # JobMarketAnalysis
 Using Indeed and Machine Learning to do a quick Job Market Analysis 
 
-## Job Market ANalysis Indeed
-A little info about your project and/ or overview that explains **what** the project is about.
+## Job Market Analysis Indeed
+This project scrap Indeed job (Data Scientist, Business Intelligence, Developer, etc..), predict salary with Machine Learning models and then generate a document that summary the job market in I.T.
 
 ## Motivation
-A short description of the motivation behind the creation and maintenance of the project. This should explain **why** the project exists.
+Project for training of the frame of Developpeur Data I.A.
 
 ## Build status
 Build status of continus integration i.e. travis, appveyor etc. Ex. - 
