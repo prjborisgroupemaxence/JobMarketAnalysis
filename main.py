@@ -114,7 +114,7 @@ def do_cleaning(data):
     print("\n****************************************")
     print("*** do_cleaning")
     print("****************************************")
-    cleaning.clean(data)
+    return cleaning.clean(data)
 
 # %% DoModel
 
@@ -129,7 +129,7 @@ def make_model(data):
     print("\n****************************************")
     print("*** make_model")
     print("****************************************")
-    modeling.modelize(data)
+    return modeling.modelize(data)
 
 # %% UpdateDB
 
@@ -226,19 +226,19 @@ def main():
 
     if cleaner:
         # Clean
-        do_cleaning(jobs_df)
+        cleaned_df = do_cleaning(jobs_df)
 
     if model:
         # Modelization
-        make_model(jobs_df)
+        predict_df = make_model(cleaned_df)
 
     if update:
         # Update DB with results from models
-        update_db(jobs_df)
+        update_db(predict_df)
 
     if report:
         # Create and send report
-        make_report(jobs_df)
+        make_report(predict_df)
 
     print("\n\n================================================================================")
     print("Main End")
