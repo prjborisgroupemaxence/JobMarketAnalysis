@@ -9,6 +9,7 @@ Code to get data from CSVs and the mongo database and to update it after the mod
 """
 
 import pandas as pd
+import numpy as np
 
 import rdmmp.misc as misc
 
@@ -45,6 +46,8 @@ def import_data_from_csv(folderpath, jobs, locations):
     alldata = pd.DataFrame()
     for job in jobs:
         for loc in locations:
+            # version temporaire pour récupérer tous les fichiers scrapés
+            # bon code en commentaire après
             for i in range(2):
                 if i == 0:
                     filepath = folderpath.joinpath(job.lower().replace(' ', '_') + '_' + loc.lower() + '.csv')
@@ -77,7 +80,18 @@ def import_data_from_csv(folderpath, jobs, locations):
 #            except:
 #                print("Error reading {}...".format(filepath))
 
+    # drop les doublons sur l'ensemble des colonnes
     alldata.drop_duplicates(inplace=True)
+    # drop les lignes où le scraping n'a pas marché (aucune info récupérée mais url ok)
+    indexNum = alldata[alldata['Title'].isnull() &
+                       alldata['Company'].isnull() &
+                       alldata['Salary'].isnull() &
+                       alldata['City'].isnull() &
+                       alldata['Posting'].isnull()
+                       ].index
+    alldata.drop(indexNum , inplace=True)
+    # reset de l'index
+    alldata.reset_index(drop=True, inplace=True)
 
     return alldata
 
