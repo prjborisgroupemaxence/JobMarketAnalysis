@@ -71,22 +71,23 @@ def check_colsX(df, cols_X):
     for i in cols_X:
         if i not in df.columns:
             print("Colonne %s manquante ou mal orthographiée, rechargez votre dataframe" % i)
-            break
+            return 1
+        return 'ok'
 
-def check_X(x, y):
+def check_X(x, col_y):
     '''
     called in 'def prepro' to check that y or 'Salary' not in X
-    param : x and y
+    param : x and name of column y in str format
     return : x if no matter, else None which will quit 'def prepro'
     '''
-    if y in x.columns:
-        x.drop(y, axis=1, inplace=True)
+    if col_y in x.columns:
+        x.drop(col_y, axis=1, inplace=True)
         print('Vous aviez mis votre colonne y dans X, cette colonne a été enlevée de X !')
     if 'Salary' in x:
         Sal = input('Attention ! vous avez mis la colonne Salary dans X, voulez-vous continuer ?\nyes or no')
         if Sal != 'yes' and Sal != 'y':
             print('Enlever Salary de votre X')
-            return None
+            return 1
     return x
 
 def multidum(X):
@@ -141,7 +142,8 @@ def prepro(df, cols_X, col_y='Salary'):
         dn : df with the NAN in col_y
     '''
     chtemp1 = check_colsX(df, cols_X)
-    if chtemp1 == None: return
+    if chtemp1 == 1:
+        return print('Error in check_cols_X')
     else: del chtemp1
     
     # Split rows between 'col_y' == 'NAN' and filled ones
@@ -160,7 +162,11 @@ def prepro(df, cols_X, col_y='Salary'):
     #cols_X = list(data.drop([col_y], axis=1))
     X = df[cols_X]
     X = check_X(X, col_y)
-    if X == None: return
+    try:
+        if X == 1:
+            return print('Error : check_X')
+    except:
+        pass
     
     y = df[col_y].values
     X = X.values
@@ -181,7 +187,5 @@ def prepro(df, cols_X, col_y='Salary'):
 df
 col_y = 'Salary'
 cols_X = ['City','Job']
-prepro(df, cols_X, col_y='Salary')
 
-
-
+X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')
