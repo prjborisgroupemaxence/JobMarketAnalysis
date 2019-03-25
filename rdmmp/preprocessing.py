@@ -58,6 +58,7 @@ data = importdata('C:\Formation\Simplon-Dev_Data_IA\ML\Projet_groupe_Boris\Data_
 #data = cl.clean_posting(data)
 
 df = cl.clean(data)
+df = pd.concat([df, data['Company']], axis=1)
 
 #%% Functions used in 'prepro' !
 def check_colsX(df, cols_X):
@@ -70,9 +71,18 @@ def check_colsX(df, cols_X):
     '''
     for i in cols_X:
         if i not in df.columns:
-            print("Colonne %s manquante ou mal orthographiée, rechargez votre dataframe" % i)
-            return 1
-        return 'ok'
+            print("Colonne %s manquante dans le df (ou mal orthographiée), Modifiez le nom de colonne" % i)
+            return i
+    return 'ok'
+
+# sp check
+def input_cols():
+    '''
+    Used to correct an incorrect column name
+    return a string with the name corrected by the user (human)
+    '''
+    col_X = input('noms colonnes')
+    return col_X
 
 def check_X(x, col_y):
     '''
@@ -142,7 +152,7 @@ def prepro(df, cols_X, col_y='Salary'):
         dn : df with the NAN in col_y
     '''
     chtemp1 = check_colsX(df, cols_X)
-    if chtemp1 == 1:
+    if chtemp1 != 'ok':
         return print('Error in check_cols_X')
     else: del chtemp1
     
@@ -165,7 +175,7 @@ def prepro(df, cols_X, col_y='Salary'):
     try:
         if X == 1:
             return print('Error : check_X')
-    except:
+    except ValueError:
         pass
     
     y = df[col_y].values
@@ -184,8 +194,17 @@ def prepro(df, cols_X, col_y='Salary'):
     return X_train, X_test, y_train, y_test, dn
 
 #%% Utilisation de prepro
+
+def start_prepro(df, cols_X, col_y='Salary'):
+    cc = check_colsX(df, cols_X)
+    while cc != 'ok':
+        print('Noms de colonnes %s inexistantes dans df, recommencez !' % cc)
+        cols_X[cols_X.index(cc)] = input_cols()
+        cc = check_colsX(df, cols_X)
+    X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')
+
+#%%
 df
 col_y = 'Salary'
 cols_X = ['City','Job']
 
-X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')
