@@ -49,18 +49,6 @@ def importdata(folderpath, jobs, locations):
 
 #%% ################## A suppr d'ici - Sert juste pour tester 'prepro' !
 
-<<<<<<< HEAD
-import cleaning as cl
-#from sklearn.preprocessing import Imputer
-data = importdata('C:\Formation\Simplon-Dev_Data_IA\ML\Projet_groupe_Boris\Data_csv', jobs, locations)
-#data = cl.clean_salary(data)
-#data = cl.clean_job(data)
-#data = cl.clean_city(data)
-#data = cl.clean_posting(data)
-
-df = cl.clean(data)
-df = pd.concat([df, data['Company']], axis=1)
-=======
 if __name__ == "__main__":
     import cleaning as cl
     #from sklearn.preprocessing import Imputer
@@ -71,7 +59,6 @@ if __name__ == "__main__":
     #data = cl.clean_posting(data)
     
     df = cl.clean(data)
->>>>>>> 1a924457ef05e6488900f55d01ac12100e232b61
 
 #%% Functions used in 'prepro' !
 def check_colsX(df, cols_X):
@@ -164,17 +151,10 @@ def prepro(df, col_y='Salary'):
         X_train, X_test, y_train, y_test
         dn : df with the NAN in col_y
     '''
-<<<<<<< HEAD
-    chtemp1 = check_colsX(df, cols_X)
-    if chtemp1 != 'ok':
-        return print('Error in check_cols_X')
-    else: del chtemp1
-=======
 #    chtemp1 = check_colsX(df, cols_X)
 #    if chtemp1 == 1:
 #        return print('Error in check_cols_X')
 #    else: del chtemp1
->>>>>>> 1a924457ef05e6488900f55d01ac12100e232b61
     
     # Split rows between 'col_y' == 'NAN' and filled ones
     dn = df[df[col_y].isnull()]
@@ -214,35 +194,6 @@ def prepro(df, col_y='Salary'):
     return X_train, X_test, y_train, y_test, dn
 
 #%% Utilisation de prepro
-<<<<<<< HEAD
-
-def start_prepro(df, cols_X, col_y='Salary'):
-    ''' 
-    Function that check and start prepro
-    Parameters:
-        df: The Dataframe which will be preprocessed
-        cols_X: List with the names of the columns (string) that should be in X
-            ie:['CleanCity','Company','CleanJob']
-        col_y: string with the target y column name, ie: 'Salary'
-    Returns:
-        X_train, X_test, y_train, y_test
-        dn : df with the NAN in col_y
-    '''
-    cc = check_colsX(df, cols_X)
-    while cc != 'ok':
-        print('Noms de colonnes %s inexistantes dans df, recommencez !' % cc)
-        cols_X[cols_X.index(cc)] = input_cols()
-        cc = check_colsX(df, cols_X)
-    X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')
-    return X_train, X_test, y_train, y_test, df_y_only_nan
-
-#%% Pour modifier les parametres
-df
-col_y = 'Salary'
-cols_X = ['City','Job']
-
-start_prepro(df, cols_X, col_y)
-=======
 
 if __name__ == "__main__":
     df
@@ -250,4 +201,3 @@ if __name__ == "__main__":
     cols_X = ['City','Job']
     
     X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')
->>>>>>> 1a924457ef05e6488900f55d01ac12100e232b61
