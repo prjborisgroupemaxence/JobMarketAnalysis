@@ -49,18 +49,6 @@ def importdata(folderpath, jobs, locations):
 
 #%% ################## A suppr d'ici - Sert juste pour tester 'prepro' !
 
-<<<<<<< HEAD
-import cleaning as cl
-#from sklearn.preprocessing import Imputer
-data = importdata('C:\Formation\Simplon-Dev_Data_IA\ML\Projet_groupe_Boris\Data_csv', jobs, locations)
-#data = cl.clean_salary(data)
-#data = cl.clean_job(data)
-#data = cl.clean_city(data)
-#data = cl.clean_posting(data)
-
-df = cl.clean(data)
-df = pd.concat([df, data['Company']], axis=1)
-=======
 if __name__ == "__main__":
     import cleaning as cl
     #from sklearn.preprocessing import Imputer
@@ -71,7 +59,7 @@ if __name__ == "__main__":
     #data = cl.clean_posting(data)
     
     df = cl.clean(data)
->>>>>>> 1a924457ef05e6488900f55d01ac12100e232b61
+    df = pd.concat([df, data['Company']], axis=1)
 
 #%% Functions used in 'prepro' !
 def check_colsX(df, cols_X):
@@ -164,18 +152,6 @@ def prepro(df, col_y='Salary'):
         X_train, X_test, y_train, y_test
         dn : df with the NAN in col_y
     '''
-<<<<<<< HEAD
-    chtemp1 = check_colsX(df, cols_X)
-    if chtemp1 != 'ok':
-        return print('Error in check_cols_X')
-    else: del chtemp1
-=======
-#    chtemp1 = check_colsX(df, cols_X)
-#    if chtemp1 == 1:
-#        return print('Error in check_cols_X')
-#    else: del chtemp1
->>>>>>> 1a924457ef05e6488900f55d01ac12100e232b61
-    
     # Split rows between 'col_y' == 'NAN' and filled ones
     dn = df[df[col_y].isnull()]
     if len(dn) == 0:
@@ -213,8 +189,7 @@ def prepro(df, col_y='Salary'):
     
     return X_train, X_test, y_train, y_test, dn
 
-#%% Utilisation de prepro
-<<<<<<< HEAD
+#%% Check et lancement de prepro
 
 def start_prepro(df, cols_X, col_y='Salary'):
     ''' 
@@ -237,17 +212,11 @@ def start_prepro(df, cols_X, col_y='Salary'):
     return X_train, X_test, y_train, y_test, df_y_only_nan
 
 #%% Pour modifier les parametres
-df
-col_y = 'Salary'
-cols_X = ['City','Job']
-
-start_prepro(df, cols_X, col_y)
-=======
 
 if __name__ == "__main__":
     df
     col_y = 'Salary'
     cols_X = ['City','Job']
-    
-    X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')
->>>>>>> 1a924457ef05e6488900f55d01ac12100e232b61
+
+    start_prepro(df, cols_X, col_y)
+
