@@ -49,6 +49,7 @@ def importdata(folderpath, jobs, locations):
 
 #%% ################## A suppr d'ici - Sert juste pour tester 'prepro' !
 
+<<<<<<< HEAD
 import cleaning as cl
 #from sklearn.preprocessing import Imputer
 data = importdata('C:\Formation\Simplon-Dev_Data_IA\ML\Projet_groupe_Boris\Data_csv', jobs, locations)
@@ -59,6 +60,18 @@ data = importdata('C:\Formation\Simplon-Dev_Data_IA\ML\Projet_groupe_Boris\Data_
 
 df = cl.clean(data)
 df = pd.concat([df, data['Company']], axis=1)
+=======
+if __name__ == "__main__":
+    import cleaning as cl
+    #from sklearn.preprocessing import Imputer
+    data = importdata('C:\Formation\Simplon-Dev_Data_IA\ML\Projet_groupe_Boris\Data_csv', jobs, locations)
+    #data = cl.clean_salary(data)
+    #data = cl.clean_job(data)
+    #data = cl.clean_city(data)
+    #data = cl.clean_posting(data)
+    
+    df = cl.clean(data)
+>>>>>>> 1a924457ef05e6488900f55d01ac12100e232b61
 
 #%% Functions used in 'prepro' !
 def check_colsX(df, cols_X):
@@ -136,7 +149,7 @@ def divtraintest(X, y, test_size=0.25):
     return X_train, X_test, y_train, y_test
 
 #%%
-def prepro(df, cols_X, col_y='Salary'):
+def prepro(df, col_y='Salary'):
     '''
     Preprocessing of a dataset which every columns must be categorical
     For Data supervised, y is needed
@@ -151,10 +164,17 @@ def prepro(df, cols_X, col_y='Salary'):
         X_train, X_test, y_train, y_test
         dn : df with the NAN in col_y
     '''
+<<<<<<< HEAD
     chtemp1 = check_colsX(df, cols_X)
     if chtemp1 != 'ok':
         return print('Error in check_cols_X')
     else: del chtemp1
+=======
+#    chtemp1 = check_colsX(df, cols_X)
+#    if chtemp1 == 1:
+#        return print('Error in check_cols_X')
+#    else: del chtemp1
+>>>>>>> 1a924457ef05e6488900f55d01ac12100e232b61
     
     # Split rows between 'col_y' == 'NAN' and filled ones
     dn = df[df[col_y].isnull()]
@@ -169,7 +189,7 @@ def prepro(df, cols_X, col_y='Salary'):
     ###### On se decidera sur : soit on vire la ligne et cols_X est passé en param ######
     # soit on vire le '#' ci-dessous, cols_X est déduit, et le param 'cols_X' degage dans la def !
     
-    #cols_X = list(data.drop([col_y], axis=1))
+    cols_X = list(df.drop([col_y], axis=1))
     X = df[cols_X]
     X = check_X(X, col_y)
     try:
@@ -194,6 +214,7 @@ def prepro(df, cols_X, col_y='Salary'):
     return X_train, X_test, y_train, y_test, dn
 
 #%% Utilisation de prepro
+<<<<<<< HEAD
 
 def start_prepro(df, cols_X, col_y='Salary'):
     ''' 
@@ -221,3 +242,12 @@ col_y = 'Salary'
 cols_X = ['City','Job']
 
 start_prepro(df, cols_X, col_y)
+=======
+
+if __name__ == "__main__":
+    df
+    col_y = 'Salary'
+    cols_X = ['City','Job']
+    
+    X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')
+>>>>>>> 1a924457ef05e6488900f55d01ac12100e232b61
