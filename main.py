@@ -11,6 +11,7 @@ import sys
 import rdmmp.scraping as scraping
 import rdmmp.db as db
 import rdmmp.cleaning as cleaning
+import rdmmp.preprocessing as preprocessing
 import rdmmp.modeling as modeling
 import rdmmp.reporting as reporting
 import rdmmp.misc as misc
@@ -116,6 +117,21 @@ def do_cleaning(data):
     print("****************************************")
     return cleaning.clean(data)
 
+# %% Preprocess
+
+
+def pre_processing(data):
+    """
+    Preprocess the data to be used in the model
+
+    Args:
+        data: pandas dataframe to preprocessed
+    """
+    print("\n****************************************")
+    print("*** pre_process")
+    print("****************************************")
+    return preprocessing.prepro(data)
+
 # %% DoModel
 
 
@@ -183,6 +199,7 @@ def handle_options():
     scrap = True
     working_data = True
     cleaner = True
+    pre_process = True
     model = True
     update = True
     report = True
@@ -198,7 +215,7 @@ def handle_options():
             elif arg == '-noReport':
                 report = False
 
-    return auto, scrap, working_data, cleaner, model, update, report
+    return auto, scrap, working_data, cleaner, pre_process, model, update, report
 
 
 def main():
@@ -210,7 +227,7 @@ def main():
     print("Main Start")
     print("================================================================================")
 
-    auto, scrap, working_data, cleaner, model, update, report = handle_options()
+    auto, scrap, working_data, cleaner, pre_process, model, update, report = handle_options()
 
     # Read config data and check if needed folders exist
     misc.CFG.read_ini()
@@ -227,10 +244,14 @@ def main():
     if cleaner:
         # Clean
         cleaned_df = do_cleaning(jobs_df)
+        
+    if pre_process:
+        # Preprocessing
+        pre_processed_df = pre_processing(cleaned_df)
 
     if model:
         # Modelization
-        predict_df = make_model(cleaned_df)
+        predict_df = make_model(pre_processed_df)
 
     if update:
         # Update DB with results from models
