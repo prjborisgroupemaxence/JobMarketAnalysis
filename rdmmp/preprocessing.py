@@ -196,15 +196,28 @@ def prepro(df, cols_X, col_y='Salary'):
 #%% Utilisation de prepro
 
 def start_prepro(df, cols_X, col_y='Salary'):
+    ''' 
+    Function that check and start prepro
+    Parameters:
+        df: The Dataframe which will be preprocessed
+        cols_X: List with the names of the columns (string) that should be in X
+            ie:['CleanCity','Company','CleanJob']
+        col_y: string with the target y column name, ie: 'Salary'
+    Returns:
+        X_train, X_test, y_train, y_test
+        dn : df with the NAN in col_y
+    '''
     cc = check_colsX(df, cols_X)
     while cc != 'ok':
         print('Noms de colonnes %s inexistantes dans df, recommencez !' % cc)
         cols_X[cols_X.index(cc)] = input_cols()
         cc = check_colsX(df, cols_X)
     X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')
+    return X_train, X_test, y_train, y_test, df_y_only_nan
 
-#%%
+#%% Pour modifier les parametres
 df
 col_y = 'Salary'
 cols_X = ['City','Job']
 
+start_prepro(df, cols_X, col_y)
