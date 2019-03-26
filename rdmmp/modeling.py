@@ -57,7 +57,7 @@ import preprocessing as pp
 
 # Determiner le df et cols_X
 
-X_train, X_test, y_train, y_test, dnan = pp.start_prepro(df, cols_X, col_y='Salary')
+X_train, X_test, y_train, y_test, dnan = pp.prepro(df, cols_X, col_y='Salary')
 obj_svrkrbf, num_score = gridperf(X_train, X_test, y_train, y_test, C_range=[34500], gamma_range=[0.4, 1])
 
 predictions = pd.DataFrame(obj_svrkrbf.predict(X_test))
