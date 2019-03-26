@@ -135,7 +135,7 @@ def pre_processing(data):
 # %% DoModel
 
 
-def make_model(data):
+def make_model(X_train, X_test, y_train, y_test, dnan):
     """
     Fit the model on the data and predict salary when it's unknown
 
@@ -145,12 +145,12 @@ def make_model(data):
     print("\n****************************************")
     print("*** make_model")
     print("****************************************")
-    return modeling.modelize(data)
+    return modeling.modelize(X_train, X_test, y_train, y_test, dnan)
 
 # %% UpdateDB
 
 
-def update_db(data):
+def update_db(data_krbf, data_rf):
     """
     Save the data in the DB
 
@@ -160,12 +160,12 @@ def update_db(data):
     print("\n****************************************")
     print("*** update_db")
     print("****************************************")
-    db.update(data)
+    db.update(data_krbf, data_rf)
 
 # %% Report
 
 
-def make_report(data):
+def make_report(data_krbf, data_rf):
     """
     Create a report and send it by email
 
@@ -175,7 +175,7 @@ def make_report(data):
     print("\n****************************************")
     print("*** make_report")
     print("****************************************")
-    reporting.report(data)
+    reporting.report(data_krbf, data_rf)
 
 # %% Code principal
 
@@ -247,19 +247,19 @@ def main():
         
     if pre_process:
         # Preprocessing
-        pre_processed_df = pre_processing(cleaned_df)
+        X_train, X_test, y_train, y_test, dnan = pre_processing(cleaned_df)
 
     if model:
         # Modelization
-        predict_df = make_model(pre_processed_df)
+        predict_krbf, predict_rf = make_model(X_train, X_test, y_train, y_test, dnan)
 
     if update:
         # Update DB with results from models
-        update_db(predict_df)
+        update_db(predict_krbf, predict_rf)
 
     if report:
         # Create and send report
-        make_report(predict_df)
+        make_report(predict_krbf, predict_rf)
 
     print("\n\n================================================================================")
     print("Main End")
