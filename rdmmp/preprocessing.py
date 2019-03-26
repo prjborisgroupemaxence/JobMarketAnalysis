@@ -62,28 +62,6 @@ if __name__ == "__main__":
     df = pd.concat([df, data['Company']], axis=1)
 
 #%% Functions used in 'prepro' !
-def check_colsX(df, cols_X):
-    '''
-    Check if cols_X are column's names available in the df
-    param : 
-        df : the df to check
-        cols_X : column's names to be checked
-    No return
-    '''
-    for i in cols_X:
-        if i not in df.columns:
-            print("Colonne %s manquante dans le df (ou mal orthographiée), Modifiez le nom de colonne" % i)
-            return i
-    return 'ok'
-
-# sp check
-def input_cols():
-    '''
-    Used to correct an incorrect column name
-    return a string with the name corrected by the user (human)
-    '''
-    col_X = input('noms colonnes')
-    return col_X
 
 def check_X(x, col_y):
     '''
@@ -152,6 +130,7 @@ def prepro(df, col_y='Salary'):
         X_train, X_test, y_train, y_test
         dn : df with the NAN in col_y
     '''
+    
     # Split rows between 'col_y' == 'NAN' and filled ones
     dn = df[df[col_y].isnull()]
     if len(dn) == 0:
@@ -189,34 +168,13 @@ def prepro(df, col_y='Salary'):
     
     return X_train, X_test, y_train, y_test, dn
 
-#%% Check et lancement de prepro
 
-def start_prepro(df, cols_X, col_y='Salary'):
-    ''' 
-    Function that check and start prepro
-    Parameters:
-        df: The Dataframe which will be preprocessed
-        cols_X: List with the names of the columns (string) that should be in X
-            ie:['CleanCity','Company','CleanJob']
-        col_y: string with the target y column name, ie: 'Salary'
-    Returns:
-        X_train, X_test, y_train, y_test
-        dn : df with the NAN in col_y
-    '''
-    cc = check_colsX(df, cols_X)
-    while cc != 'ok':
-        print('Noms de colonnes %s inexistantes dans df, recommencez !' % cc)
-        cols_X[cols_X.index(cc)] = input_cols()
-        cc = check_colsX(df, cols_X)
-    X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')
-    return X_train, X_test, y_train, y_test, df_y_only_nan
-
-#%% Pour modifier les parametres
+#%% Utilisation de prepro
 
 if __name__ == "__main__":
     df
     col_y = 'Salary'
     cols_X = ['City','Job']
 
-    start_prepro(df, cols_X, col_y)
-
+    
+    X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')

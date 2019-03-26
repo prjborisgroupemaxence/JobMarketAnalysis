@@ -14,7 +14,7 @@ import numpy as np
 import rdmmp.misc as misc
 
 
-def update(drf):
+def update(data_krbf, data_rf):
     """
     This is an example of Google style.
 
