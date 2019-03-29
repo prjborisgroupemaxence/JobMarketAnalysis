@@ -33,6 +33,7 @@ def salary_job_stats(df):
     return salary_df
 
 
+<<<<<<< HEAD
 def stats_city_job(df):
     """
     Get the stats (count, mean, std, min, 25%, 50%, 75%, max) for each city

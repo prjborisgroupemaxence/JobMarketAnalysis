@@ -30,7 +30,8 @@ def clean_job(data, jobtitle=['Data Analyst', 'Data Scientist', 'Junior',
         data : a dataframe with a new clean column title
     """
 
-    data['CleanJob'] = " "  # Create new column
+    rownan = []
+    data['CleanJob'] = ""  # Create new column
 
     for i, dirtytitle in enumerate(data['Title']):
 
@@ -44,6 +45,10 @@ def clean_job(data, jobtitle=['Data Analyst', 'Data Scientist', 'Junior',
                 data['CleanJob'][i] += clean_title + " "
             else:
                 pass
+            
+        if data['CleanJob'][i] == "":
+            rownan.append(dirtytitle)
+            data['CleanJob'][i] = data['Job_Category'][i].lower()
 
     return data
 
@@ -125,11 +130,12 @@ def clean_city(data):
     """
     pd.options.mode.chained_assignment = None  # default='warn'
 
-    dpt = {'IleDeFrance': ['91', '92', '93', '94', '95', '77', '78'],
-           'Nantes': ['44'],
-           'Toulouse': ['31'],
-           'Bordeaux': ['33'],
-           'Lyon': ['69']
+    dpt = {'Paris': ['75'],
+           'IleDeFrance': ['91', '92', '93', '94', '95', '77', '78', 'Hauts-de-Seine', 'Val-de-Marne', 'Seine-Saint-Denis'],
+           'Nantes': ['44', 'Pays de la Loire', 'Loire-Atlantique'],
+           'Toulouse': ['31', 'Haute-Garonne', 'Occitanie'],
+           'Bordeaux': ['33', 'Nouvelle-Aquitaine', 'Gironde'],
+           'Lyon': ['69', 'Auvergne-Rhône-Alpes']
            }
 
     rownan = []
@@ -142,13 +148,17 @@ def clean_city(data):
             # Start by check if the city contains a key name city
             if key in city:
                 data['CleanCity'][i] = key
-                rownan.append(i)
 
             # if not, we check for a zip code and replace by the key associated
-            elif key not in city:
+            else:
                 for elm in value:
                     if elm in city:
                         data['CleanCity'][i] = key
+                        break
+                    
+        if data['CleanCity'][i] == 'nan':
+            rownan.append(city)
+            data['CleanCity'][i] = data['Location_Category'][i]   
 
     return data
 

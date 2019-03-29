@@ -18,7 +18,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 import pandas as pd
 import numpy as np
-from pygame import mixer    # pour jouer un son dans python
+#from pygame import mixer    # pour jouer un son dans python
 
 import rdmmp.misc as misc
 
@@ -39,9 +39,9 @@ def play_mp3(sound):
     sound :  path of the audio file
     play the sound
     """
-    mixer.init()
-    mixer.music.load(sound)
-    mixer.music.play()
+#    mixer.init()
+#    mixer.music.load(sound)
+#    mixer.music.play()
 
 
 def get_soup(url):
