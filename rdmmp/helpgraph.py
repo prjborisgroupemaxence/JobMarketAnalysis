@@ -31,3 +31,28 @@ def salary_job_stats(df):
                    inplace=True)
 
     return salary_df
+
+
+def stats_city_job(df):
+    """
+    Get the stats (count, mean, std, min, 25%, 50%, 75%, max) for each city
+    (Paris, Nantes, etc..)
+
+    Parameter:
+        df : a dataframe with job and city columns
+
+    Returns:
+        salary_df : a dataframe with count each job per city
+    """
+    # Stats on 5 basic job
+    row_to_keep = ['data scienstist', 'data analyst', 'business intelligence',
+                   'developpeur']
+    
+    df = df[df['Job'].isin(row_to_deep)]
+    
+    # Stats for each city (even junior, alternance, etc)
+    city_stats = df.groupby('City')['Job'].describe().reset_index()
+
+    city_df = city_stats.T  # To have job title columns
+    
+    return city_df['count']

@@ -251,7 +251,7 @@ def send_report():
         server.send_message(message)
 
 
-def report(jobs_df):
+def report(data_krbf, data_rf):
     """
     'Main' function of the module, starting point to create and send a report on the job market.
 
