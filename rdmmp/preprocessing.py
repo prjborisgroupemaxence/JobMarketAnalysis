@@ -9,6 +9,7 @@ Created on Wed Mar 13 10:19:48 2019
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+import cleaning as cl
 
 #%% ################## A suppr d'ici - Sert juste pour tester 'prepro' !
 jobs = ['Data Scientist', 'Developpeur', 'Business Intelligence', 'Data Analyst']
@@ -48,8 +49,8 @@ def importdata(folderpath, jobs, locations):
     return alldata
 
 #%% ################## A suppr d'ici - Sert juste pour tester 'prepro' !
-
-if __name__ == "__main__":
+#if __name__ == "__main__":
+def data_read():        
     import cleaning as cl
     #from sklearn.preprocessing import Imputer
     data = importdata('C:\Formation\Simplon-Dev_Data_IA\ML\Projet_groupe_Boris\Data_csv', jobs, locations)
@@ -59,122 +60,318 @@ if __name__ == "__main__":
     #data = cl.clean_posting(data)
     
     df = cl.clean(data)
-    df = pd.concat([df, data['Company']], axis=1)
+    #df = pd.concat([df, data['Company']], axis=1)
+    return df
 
 #%% Functions used in 'prepro' !
+##################################### DANS Check_Cols
+# Check, utile dans le check des colonnes
 
-def check_X(x, col_y):
+# Check, utile dans le check des cols
+def input_cols():
     '''
-    called in 'def prepro' to check that y or 'Salary' not in X
-    param : x and name of column y in str format
-    return : x if no matter, else None which will quit 'def prepro'
+    Used to correct an incorrect column name \n
+    return String, a string with the name corrected by the user (human)
     '''
-    if col_y in x.columns:
-        x.drop(col_y, axis=1, inplace=True)
-        print('Vous aviez mis votre colonne y dans X, cette colonne a été enlevée de X !')
-    if 'Salary' in x:
-        Sal = input('Attention ! vous avez mis la colonne Salary dans X, voulez-vous continuer ?\nyes or no')
-        if Sal != 'yes' and Sal != 'y':
-            print('Enlever Salary de votre X')
-            return 1
-    return x
+    col_X = input('noms colonnes\t')
+    return col_X
 
-def multidum(X):
+# Check, check col y
+def check_col_y_name(df, col_y):
     '''
-    GetDummies(GD), with drop_first, on np.ndarray or pd.DataFrame with ONLY categorical
-    Parameter : array/df to be GD
-    Return : New Dataframe modified by GD
+    check if col_y is a column's name in the df \n
+    param : df, col_y: String, name of the column y \n
+    return : String, column y's name (col_y)
     '''
-    if isinstance(X, pd.DataFrame):
-        X = X.values
-    if isinstance(X, np.ndarray):
-        try:
-            if X.shape[1] > 0: pass
-        except:
-            X = np.array(X).reshape(len(X),1)
-        rs, cs = X.shape
-        X_temp = [0]*cs
-        for i in range(cs):
-            X_temp[i] = pd.get_dummies(X[:, i], drop_first=True)
-        Final_X = X_temp[0]
-        if len(X_temp) >1:
-            for l in range(1, cs):
-                Final_X = pd.concat([Final_X,X_temp[l]],axis=1)
-    else: return print("Parameter X should be np.array or pd.DataFrame")
-    return Final_X
+    while col_y not in df:
+        print('Error : col_y incorrect : %s is not in the df\'s names, pls enter a correct name' % col_y)
+        col_y = input_cols()
+    return col_y
 
+# Check, utile dans le check des cols de X
+def Help_check_colsX(df, cols_X):
+    '''
+    Check if cols_X are column's names available in the df
+    
+    param : 
+        df : the df to check
+        cols_X : List of Strings, column's names to be checked
+        
+    return : String, 'ok' if all is ok, else return the bad name to correct
+    '''
+    for i in cols_X:
+        if i not in df.columns:
+            #print("Colonne %s manquante dans le df (ou mal orthographiée), Modifiez le nom de colonne" % i)
+            return i
+    return 'ok'
+
+def check_cols_X_names(df, col_y, cols_X=None):
+    '''
+    Check the column's names for X \n
+    param :
+        df : DF with, at least, the columns needed for X and y \n
+        col_y : String,  name of the column y \n
+        cols_X=None : If None, cols_X will be deduced, else List of String, which will be checked
+        
+    return : List of Strings with the correct names of X (cols_X)
+    '''
+    #soit déduit de df grace a col_y
+    if cols_X == None:
+        cols_X = list(df.drop([col_y], axis=1))
+        
+    #soit choisi par l'utilisateur
+    else:
+        if col_y in cols_X:
+            print('Vous avez mis votre colonne y dans vos colonnes X, recommencez X')
+            return None
+        cc = Help_check_colsX(df, cols_X)
+        while cc != 'ok':
+            print('Nom de colonne: %s est inexistant dans le df, modifiez le nom !' % cc)
+            cols_X[cols_X.index(cc)] = input_cols()
+            cc = Help_check_colsX(df, cols_X)
+        
+    return cols_X
+
+##################################### Dans prepa_1
+# Etape, Check, Check le noms des colonnes
+def Check_Cols(df, col_y, cols_X=None):
+    '''
+    Main of the checks cols for X and y \n
+    param :
+        df : DF with, at least, the columns needed for X and y \n
+        col_y : String,  name of the column y \n
+        cols_X=None : If None, cols_X will be deduced, else List of String, which will be checked
+        
+    return : Tuple with :
+        List of Strings with the correct names of X (cols_X)
+        String, column y's name (col_y)
+    '''
+    col_y = check_col_y_name(df, col_y)
+    cols_X = check_cols_X_names(df, col_y, cols_X)
+    if cols_X == None:
+        return print('y in X'), col_y
+    return cols_X, col_y
+
+
+# Special
+def convert_to_nan(string):
+    '''
+    replace a cell string by np.nan value \n
+    param : String \n
+    return : NAN \n
+    Used with apply()
+    '''
+    if (string == '') or (string =="nan") or (string ==" "):
+        string = None
+    return string
+
+# Convert every special Xnan with None or nan
+def conv_nan_none(df, cols):
+    '''
+    Call a function which will apply a value to each column of the df
+    param : DF, cols: List of Strings with the names of the columns you want to apply
+    return DF
+    '''
+    for i in cols:
+        df[i] = df[i].apply(convert_to_nan)
+    return df
+
+# Etape, Action, suppression des NAN de X
+def delr_nan_X(df, cols_X):
+    '''
+    Delete rows of X with 'NAN' value (don't care about NAN in col_y) \n
+    param : df, col_y = String, name of column y \n
+    return : df without the rows which got NAN in X (df - col_y)
+    '''
+    df = conv_nan_none(df, cols_X)
+    if df[cols_X].isnull().sum().sum() != 0:
+        df.dropna(subset=cols_X, inplace=True)
+    return df
+
+# Etape, Action, Separation des lignes contenant les y NAN et les y valeur
+def splr_nan_y(df, col_y):
+    '''
+    Split rows between 'col_y' == 'NAN' and filled ones \n
+    param : df, col_y = String, name of column y \n
+    return both dfs : 1st df with col_y filled, 2nd dn with col_y with NAN \n
+    Warning : print a Warning if no NAN in col_y, cause this function is unuseful
+    '''
+    df[col_y] = df[col_y].apply(convert_to_nan) # Ou aussi df = conv_nan_none(df, [col_y])
+    if df[col_y].notnull().all():
+        print("Warning, it's strange cause no 'NAN' in", col_y)
+        dn = pd.DataFrame()
+        return df, dn
+    else:
+        dn = df[df[col_y].isnull()]
+        df = df[df[col_y].notnull()]
+    return df, dn
+
+# Etape, Action, Separation des lignes entre X_train, X_test, y_train, y_test
 def divtraintest(X, y, test_size=0.25):
     '''
-    Do the train/test with prints and size by default 0.25
-    param : X, y and the test_size
-    return : X_train, X_test, y_train, y_test
+    Do the train/test with prints and size by default 0.25 \n
+    param : X = DF, y = DF and the test_size = Float, the % of test rows \n
+    return : DF : X_train, X_test, y_train, y_test
     '''
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
     print("Nb rows dans X_train: %d" % len(X_train), "\tNb rows dans X_test: %d" % len(X_test))
     print("Nb rows dans y_train: %d" % len(y_train), "\tNb rows dans y_test: %d" % len(y_test))
     return X_train, X_test, y_train, y_test
 
-#%%
-def prepro(df, col_y='Salary'):
+##################################### DANS Prepro
+
+def prepa_1(df, col_y, cols_X=None, delrnanx=True):
     '''
-    Preprocessing of a dataset which every columns must be categorical
-    For Data supervised, y is needed
+    First part of the preprocessing \n
+    Parameters:
+        df: The Dataframe which will be preprocessed
+        col_y = String with the y column's name, ie: 'Salary'
+        cols_X=None, List of Strings, names of the columns that should be in X
+            ie:['CleanCity','Company','CleanJob']
+            If cols_X is None : cols_X is deduced (df - col_y)
+        delrnanx=true, if NANs in X should delete the rows
+        
+    Returns:
+        DF : X_train, X_test, y_train, y_test
+        dn = DF with the NAN in col_y
+        
+    Warning with the first function 'delr_nan_X' cause NAN in X will delete rows
+    '''
+#Check_Cols :
+    cols_X, col_y = Check_Cols(df, col_y, cols_X)
+    if cols_X == None:
+        return None
+#GNX : On supprime les NAN de X :
+    if delrnanx:
+        df = delr_nan_X(df, cols_X) # Attention avec un autre DF
+        
+#Synan : Separation des lignes : les y NAN et les y Valeur
+    # df is the DF to train and test cause every y are values
+    # dn is the DF to predict cause every y are NAN
+    df, dn = splr_nan_y(df, col_y)
+    
+#ScolXy : Separation des colonnes : les colonnes X d'un coté et la colonne y de l'autre
+    # Determine X :
+    X = df[cols_X]
+    
+    # Determine y :
+    y = df[col_y]
+
+#Split_tt : Split train_X, ..., y_test
+    X_train, X_test, y_train, y_test = divtraintest(X, y)
+    return X_train, X_test, y_train, y_test, dn, df
+
+# Etape, Action, GD
+def action_X(Xt, drop1=True):
+    '''
+    GetDummies(GD), with drop_first by default, on pd.DataFrame with ONLY categorical \n
+    param: DF with X columns (not y) to be GD, ONLY categorical columns ! \n
+    return: new DF converted by get_dummies
+        return None if problem
+    
+    Warning ONLY for DF with CATEGORICAL FEATURES !
+    '''    
+    # Ready for getdummies via multidum(X) with a categorical Xt
+    if not isinstance(Xt, pd.DataFrame): return print("Parameter Xt should be pd.DataFrame")
+    else:
+        X_gd = pd.get_dummies(Xt)
+        # Deletion column named NAN if exists
+        if 'nan' in X_gd.columns:
+            X_gd = X_gd.drop(['nan'], axis=1)
+            
+    return X_gd
+
+#%%
+def prepro(df, col_y='Salary', cols_X=None, delrnanx=True):
+    '''
+    Preprocessing of a dataset which every columns should be categorical !
+    For remind : For Data supervised, y is needed
     
     Parameters:
         df: The Dataframe which will be preprocessed
-        cols_X: List with the names of the columns (string) that should be in X
+        col_y = String with the y column's name, ie: 'Salary'
+        cols_X=None, List of Strings, names of the columns that should be in X
             ie:['CleanCity','Company','CleanJob']
-        col_y: string with the target y column name, ie: 'Salary'
+            If cols_X is None : cols_X is deduced (df - col_y)
+        delrnanx=true, if NANs in X should delete the rows
         
     Returns:
-        X_train, X_test, y_train, y_test
-        dn : df with the NAN in col_y
+        DF : X_train, X_test, y_train, y_test
+        dn = DF with the NAN in col_y
+        
+    Warning with the first function of prepa_1 'delr_nan_X' cause NAN in X will delete rows
     '''
-    
-    # Split rows between 'col_y' == 'NAN' and filled ones
-    dn = df[df[col_y].isnull()]
-    if len(dn) == 0:
-        print("Warning, it's strange cause no 'NAN' in", col_y)
-    df = df[df[col_y].notnull()]
-    
-    # Delete rows with 'NAN' value
-    if df.isnull().sum().sum() != 0:
-        df.dropna(inplace = True)
-    
-    ###### On se decidera sur : soit on vire la ligne et cols_X est passé en param ######
-    # soit on vire le '#' ci-dessous, cols_X est déduit, et le param 'cols_X' degage dans la def !
-    
-    cols_X = list(df.drop([col_y], axis=1))
-    X = df[cols_X]
-    X = check_X(X, col_y)
+    #df_orig = df.copy()
+    #delrnanx=True
     try:
-        if X == 1:
-            return print('Error : check_X')
-    except ValueError:
-        pass
+        X_train, X_test, y_train, y_test, dn, df = prepa_1(df, col_y, cols_X, delrnanx)
+    except TypeError:
+        print('Error, read precedent message, maybe y is in X')
+        return
+    Final_X_train = action_X(X_train)
+    Final_X_test = action_X(X_test)
+    if not isinstance(Final_X_train, pd.DataFrame):
+        return print("process stopped cause X_train is not df")
+    if not isinstance(Final_X_test, pd.DataFrame):
+        return print("process stopped cause X_test is not df")
+        
+    # Pour reformer le df et virer les nan de y
+    #ndf = pd.concat([X, y], axis=1)
     
-    y = df[col_y].values
-    X = X.values
     
-    # Ready for getdummies via multidum(X) with a categorical X
-    Final_X = multidum(X)
-    
-    if 'nan' in Final_X.columns:
-        Final_X = Final_X.drop(['nan'], axis=1)
-    
-    
-    
-    X_train, X_test, y_train, y_test = divtraintest(Final_X, y)
-    
-    return X_train, X_test, y_train, y_test, dn
+    return Final_X_train, Final_X_test, y_train, y_test, dn, df
 
-
-#%% Utilisation de prepro
-
+#%% Pour modifier les parametres
 if __name__ == "__main__":
-    df
+        
+    df = data_read()
     col_y = 'Salary'
     cols_X = ['City','Job']
-
     
-    X_train, X_test, y_train, y_test, df_y_only_nan = prepro(df, cols_X, col_y='Salary')
+    Final_X_train, Final_X_test, y_train, y_test, dn, df = prepro(df, col_y)#, cols_X)
+
+# Tests des sous_fonctions
+def try1():
+    df = data_read()
+    col_y = 'Salary'
+    
+    # Check, check col y
+    col_y = check_col_y_name(df, col_y)
+    
+    cols_X = check_cols_X_names(df, col_y, cols_X)
+    
+    cols_X, col_y = Check_Cols(df, col_y, cols_X)
+    
+    # Convert every special Xnan with None
+    df = conv_nan_none(df, cols_X)
+    
+    # Etape, Action, suppression des NAN de X
+    df = delr_nan_X(df, cols_X)
+    
+    # Etape, Action, Separation des lignes contenant les y NAN et les y valeur
+    df, dn = splr_nan_y(df, col_y)
+    
+    X = df[cols_X]
+    y = df[col_y]
+    
+    # Etape, Action, Separation des lignes entre X_train, X_test, y_train, y_test
+    X_train, X_test, y_train, y_test = divtraintest(X, y, test_size=0.25)
+
+#RESET
+def try2():
+    df = data_read()
+    col_y = 'Salary'
+    
+    X_train, X_test, y_train, y_test, dn, df = prepa_1(df, col_y)
+    
+    FX_train = action_X(X_train)
+
+# PREPRO !!! Reset
+def try3():
+    df = data_read()
+    col_y = 'Salary'
+    cols_X = ['City','Job']
+    
+    return prepro(df, col_y, cols_X)
+
+###############
