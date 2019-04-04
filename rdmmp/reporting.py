@@ -26,27 +26,113 @@ import tempfile
 import uuid
 import zipfile
 import datetime
+import pandas as pd
+import matplotlib
+
+from pylab import title, figure, xlabel, ylabel, xticks, bar, legend, axis, savefig
+from fpdf import FPDF
+from custompdf import FPDF
 
 import rdmmp.misc as misc
 
+
 # %% Create the report
 
+# pip install fpdf
+class PDF(FPDF):
+    
+    def header(self):
+        # Logo
+        self.image('logo/ecole-ia-logo.png', 0, 0, 33)
+        self.image('logo/simplon-logo.png', 175, 7, 33)        
+        # Arial bold 15
+        self.set_font('Arial', 'B', 20)
+        # Move to the right (8cm to the right)
+        self.cell(80)
+        # Title
+        self.cell(30, 10, 'Indeed Job Market Analysis', 0, 0, 'C')
+        # Line break
+        self.ln(20)
+
+    # Page footer
+    def footer(self):
+        # Position at 1.5 cm from bottom
+        self.set_y(-15)
+        # Arial italic 8
+        self.set_font('Arial', 'I', 8)
+        # Text color in gray
+        self.set_text_color(128)
+        # Author 
+        author = "Philippe - Maxence - Radia - Martial - David"
+        self.cell(20, 10, author, align='L', ln=1)
+        # Page number
+        self.cell(0, 0, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, align='R')
+        
 
 def create_report():
     """
-    This is an example of Google style.
+    Create a pdf report named Job Market Analysis.pdf in the folder Report
 
-    Args:
-        param1: This is the first param.
-        param2: This is a second param.
-
-    Returns:
-        This is a description of what is returned.
-
-    Raises:
-        KeyError: Raises an exception.
     """
-
+    df = pd.DataFrame()
+    df['Question'] = ["Q1", "Q2", "Q3", "Q4"]
+    df['Charles'] = [3, 4, 5, 3]
+    df['Mike'] = [3, 3, 4, 4]
+    
+    title("Professor Criss's Ratings by Users")
+    xlabel('Question Number')
+    ylabel('Score')
+    
+    c = [2.0, 4.0, 6.0, 8.0]
+    m = [x - 0.5 for x in c]
+    
+    xticks(c, df['Question'])
+    
+    bar(m, df['Mike'], width=0.5, color="#91eb87", label="Mike")
+    bar(c, df['Charles'], width=0.5, color="#eb879c", label="Charles")
+    
+    legend()
+    axis([0, 10, 0, 8])
+    savefig('graph/barchart.png')
+    
+    pdf = PDF()
+    pdf.alias_nb_pages()
+    pdf.add_page()
+    #pdf.set_xy(0, 0)
+    pdf.set_font('arial', 'B', 12)
+    pdf.cell(60)
+    pdf.cell(75, 10, "A Tabular and Graphical Report of Professor Criss's Ratings by Users Charles and Mike", 0, 2, 'C')
+    pdf.cell(90, 10, " ", 0, 2, 'C')
+    pdf.cell(-40)
+    pdf.cell(50, 10, 'Question', 1, 0, 'C')
+    pdf.cell(40, 10, 'Charles', 1, 0, 'C')
+    pdf.cell(40, 10, 'Mike', 1, 2, 'C')
+    pdf.cell(-90)
+    pdf.set_font('arial', '', 12)
+    for i in range(0, len(df)):
+        pdf.cell(50, 10, '%s' % (df['Question'].ix[i]), 1, 0, 'C')
+        pdf.cell(40, 10, '%s' % (str(df.Mike.ix[i])), 1, 0, 'C')
+        pdf.cell(40, 10, '%s' % (str(df.Charles.ix[i])), 1, 2, 'C')
+        pdf.cell(-90)
+    pdf.cell(90, 10, " ", 0, 2, 'C')
+    pdf.cell(-30)
+    pdf.image('graph/barchart.png', x = None, y = None, w = 0, h = 0, type = '', link = '')
+    pdf.output('Report/test.pdf', 'F')
+    
+         
+"""
+# Instantiation of inherited class
+pdf = PDF()
+pdf.alias_nb_pages()
+pdf.add_page()
+pdf.set_font('Times', '', 12)
+for i in range(1, 41):
+    pdf.cell(0, 10, 'Printing line number ' + str(i), 0, 1)
+pdf.output('tuto2.pdf', 'F')
+"""   
+    
+create_report()
+    
 # %% Send the report
 
 
