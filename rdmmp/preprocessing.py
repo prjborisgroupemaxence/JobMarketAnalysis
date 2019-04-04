@@ -261,6 +261,82 @@ def prepa_1(df, col_y, cols_X=None, delrnanx=True):
     X_train, X_test, y_train, y_test = divtraintest(X, y)
     return X_train, X_test, y_train, y_test, dn, df
 
+################################
+
+def search_missing_col(dfa, dfb, string=True):
+    '''
+    return the name(s) of dfb's columns which are not in dfa
+    params : both df witch will return (dfa - dfb) names
+        string : True if you want to return a string instead of a list of strings
+    return : String OR List with the column names that are in dfb but missing in dfa
+    '''
+    g = str(','.join(set( dfa.columns ) - set( dfb.columns )))
+    if string: return g
+    else:
+        g = g.split(',')
+        return g
+
+def double_search_missing_col(dfa, dfb):
+    '''
+    return the names of 2 df columns with difference between them \n
+    params : 2 DF which column's names will be compared \n
+        
+    return : 2 Lists of String OR 1 List of Strings and 1 empty List OR 2 empty lists
+    
+    Warning, if all the columns of 2 df are in the other one, this list will return empty
+    '''
+    lab = search_missing_col(dfa, dfb, string=False)
+    lba = search_missing_col(dfb, dfa, string=False)
+    if len(lab) == 1:
+        if lab[0] == '':lab = []
+    if len(lba) == 1:
+        if lba[0] == '':lba = []
+    return lab, lba
+
+def add_val_to_dfcol(df, name_col, val=0):
+    '''
+    Modify all the values of 1 column of the df, if column does not exists, it'll be created \n
+    param: DF
+        name_col: String or List with 1 String
+        val=0 : Value to fill the column \n
+    return: the DF modified OR not mofified if Error
+    
+    Warning, the DF will really be modified, use .copy() before if you want to save it
+    '''
+    if not isinstance(name_col, list) and not isinstance(name_col, str):
+        print('Error: name_col should be a string or List of string, no modification on df')
+        return df
+    else:
+        if isinstance(name_col, list):
+            if len(name_col) != 1:
+                print('Error: only 1 column name in your list: name_col, no modification on df')
+                return df
+            else:
+                name_col = str(name_col[0])
+    df[name_col] = val
+    return df
+
+def add_missing_cols(dfa, dfb, both=True):
+    '''
+    Between 2 DF : Add columns which are missing in dfb from dfa \n
+    If both=True, it will add in both DF completing each other missing columns \n
+    param: Both DF
+        both=True : If will add in both DF and not only in dfb \n
+    return: both DF
+    '''
+    dfa_dfb, dfb_dfa = double_search_missing_col(dfa, dfb)
+    if not not dfa_dfb:
+        for i in dfa_dfb:
+            add_val_to_dfcol(dfb, i)    
+    if both:
+        if not not dfb_dfa:
+            for i in dfb_dfa:
+                add_val_to_dfcol(dfa, i)
+    else: print('1st DF (dfa) has not been modified ! cause both=False')
+    return dfa, dfb
+
+################################
+
 # Etape, Action, GD
 def action_X(Xt, drop1=True):
     '''
@@ -314,6 +390,8 @@ def prepro(df, col_y='Salary', cols_X=None, delrnanx=True):
         return print("process stopped cause X_train is not df")
     if not isinstance(Final_X_test, pd.DataFrame):
         return print("process stopped cause X_test is not df")
+    
+    add_missing_cols(Final_X_train, Final_X_test)
         
     # Pour reformer le df et virer les nan de y
     #ndf = pd.concat([X, y], axis=1)
@@ -330,6 +408,8 @@ if __name__ == "__main__":
     
     Final_X_train, Final_X_test, y_train, y_test, dn, df = prepro(df, col_y)#, cols_X)
 
+
+################################################################################
 # Tests des sous_fonctions
 def try1():
     df = data_read()
