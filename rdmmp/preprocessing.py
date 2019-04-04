@@ -220,7 +220,7 @@ def divtraintest(X, y, test_size=0.25):
 
 ##################################### DANS Prepro
 
-def prepa_1(df, col_y, cols_X=None, delrnanx=True):
+def prepa_1(df, col_y, cols_X=None, delrnanx=True, forpred=False):
     '''
     First part of the preprocessing \n
     Parameters:
@@ -229,11 +229,13 @@ def prepa_1(df, col_y, cols_X=None, delrnanx=True):
         cols_X=None, List of Strings, names of the columns that should be in X
             ie:['CleanCity','Company','CleanJob']
             If cols_X is None : cols_X is deduced (df - col_y)
-        delrnanx=true, if NANs in X should delete the rows
-        
+        delrnanx=true : if NANs in X should delete the rows
+        forpred=False : if True, you use the function for prediction which y are NAN
+
     Returns:
         DF : X_train, X_test, y_train, y_test
         dn = DF with the NAN in col_y
+        With forpred=True : return: 2 DF: dn, X
         
     Warning with the first function 'delr_nan_X' cause NAN in X will delete rows
     '''
@@ -251,7 +253,12 @@ def prepa_1(df, col_y, cols_X=None, delrnanx=True):
     df, dn = splr_nan_y(df, col_y)
     
 #ScolXy : Separation des colonnes : les colonnes X d'un coté et la colonne y de l'autre
-    # Determine X :
+    
+    if forpred:
+        X = dn[cols_X]
+        return dn, X
+    
+    # Determine X
     X = df[cols_X]
     
     # Determine y :
@@ -357,7 +364,7 @@ def action_X(Xt, drop1=True):
             
     return X_gd
 
-#%%
+#%% Preprocessing at the beginning
 def prepro(df, col_y='Salary', cols_X=None, delrnanx=True):
     '''
     Preprocessing of a dataset which every columns should be categorical !
@@ -371,14 +378,14 @@ def prepro(df, col_y='Salary', cols_X=None, delrnanx=True):
             If cols_X is None : cols_X is deduced (df - col_y)
         delrnanx=true, if NANs in X should delete the rows
         
-    Returns:
+    Return:
         DF : X_train, X_test, y_train, y_test
         dn = DF with the NAN in col_y
         
     Warning with the first function of prepa_1 'delr_nan_X' cause NAN in X will delete rows
     '''
     #df_orig = df.copy()
-    #delrnanx=True
+
     try:
         X_train, X_test, y_train, y_test, dn, df = prepa_1(df, col_y, cols_X, delrnanx)
     except TypeError:
@@ -387,17 +394,51 @@ def prepro(df, col_y='Salary', cols_X=None, delrnanx=True):
     Final_X_train = action_X(X_train)
     Final_X_test = action_X(X_test)
     if not isinstance(Final_X_train, pd.DataFrame):
-        return print("process stopped cause X_train is not df")
+        return print("Error: process stopped cause X_train is not df")
     if not isinstance(Final_X_test, pd.DataFrame):
-        return print("process stopped cause X_test is not df")
+        return print("Error: process stopped cause X_test is not df")
     
     add_missing_cols(Final_X_train, Final_X_test)
+        
         
     # Pour reformer le df et virer les nan de y
     #ndf = pd.concat([X, y], axis=1)
     
     
     return Final_X_train, Final_X_test, y_train, y_test, dn, df
+
+# Preprocessing for pred
+def prepro_pred(dn, col_y='Salary', cols_X=None, delrnanx=True):
+    '''
+    Preprocessing of a pred dataset which every columns should be categorical !
+    
+    Parameters:
+        df: The Dataframe which will be preprocessed
+        col_y = String with the y column's name, ie: 'Salary'
+        cols_X=None, List of Strings, names of the columns that should be in X
+            ie:['CleanCity','Company','CleanJob']
+            If cols_X is None : cols_X is deduced (df - col_y)
+        delrnanx=true, if NANs in X should delete the rows
+        
+    return:
+        DF : X_pred, X ready to accept the model object to predict y NAN
+        dn = DF with the NAN in col_y
+        
+    Warning with the first function of prepa_1 'delr_nan_X' cause NAN in X will delete rows
+    '''
+    forpred=True
+    if not isinstance(dn, pd.DataFrame):
+        return print("Error: process stopped cause dn is not a DF")
+    try:
+        dn, X = prepa_1(dn, col_y, cols_X, delrnanx, forpred)
+    except TypeError:
+        print('Error, read precedent message, maybe y is in X')
+        return
+    
+    
+    Final_X_pred = action_X(X)    
+    
+    return Final_X_pred, dn
 
 #%% Pour modifier les parametres
 if __name__ == "__main__":
