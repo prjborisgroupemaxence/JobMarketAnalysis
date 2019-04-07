@@ -5,11 +5,18 @@
 .spyproject/
 __pycache__/
 
+# Packages to install
+requirements_dev.txt
+
 # Folders with temporary working files
 csv*/
 report/
 
-# Log from scraping 
+# Folders with old files saved just in case
+backup
+
+# Logs
+logfile.log
 geckodriver.log
 
 # INI Files
@@ -26,4 +33,7 @@ Notes.txt
 # MSTest test Results
 #[Tt]est[Rr]esult*/
 #[Bb]uild[Ll]og.*
+
+# Test files
 rdmmp/test.py
+test.py
