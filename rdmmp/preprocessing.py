@@ -9,7 +9,6 @@ Created on Wed Mar 13 10:19:48 2019
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-import cleaning as cl
 
 #%% ################## A suppr d'ici - Sert juste pour tester 'prepro' !
 jobs = ['Data Scientist', 'Developpeur', 'Business Intelligence', 'Data Analyst']
@@ -397,7 +396,7 @@ def prepro(df, col_y='Salary', cols_X=None, delrnanx=True):
     #ndf = pd.concat([X, y], axis=1)
     
     
-    return Final_X_train, Final_X_test, y_train, y_test, dn, df
+    return Final_X_train, Final_X_test, y_train, y_test, dn#, df
 
 #%% Pour modifier les parametres
 if __name__ == "__main__":
