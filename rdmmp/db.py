@@ -99,7 +99,8 @@ def load_df(db_name, collection_name):
     data = pd.DataFrame(list(mycollec.find()))
     
     # Drop the _id column mongoDB automatically added
-    data.drop('_id', axis=1, inplace=True)
+    if '_id' in data.columns:
+        data.drop('_id', axis=1, inplace=True)
     
     # Get the duration of the code above
     duration = timeit.default_timer() - time_start

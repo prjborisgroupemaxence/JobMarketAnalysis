@@ -128,13 +128,16 @@ def get_working_data(database_data):
     log.info('%d rows from csv files', csv_data.shape[0])
 
     # Concat the 2 dataframes
-    dataframe = pd.concat([database_data, csv_data], join='inner')
+    if not database_data.empty:
+        dataframe = pd.concat([database_data, csv_data], join='inner')
 
-    # drop duplicates except the first(database)
-    dataframe.drop_duplicates(['Title', 'Company', 'Salary', 'City', 'Posting'], inplace=True)
+        # drop duplicates except the first(database)
+        dataframe.drop_duplicates(['Title', 'Company', 'Salary', 'City', 'Posting'], inplace=True)
 
-    # reset index
-    dataframe.reset_index(drop=True, inplace=True)
+        # reset index
+        dataframe.reset_index(drop=True, inplace=True)
+    else:
+        dataframe = csv_data
 
     log.info('%d rows in the merge', dataframe.shape[0])
 

@@ -56,15 +56,12 @@ def get_soup(url):
     Returns:
         soup: soup object
     """
-    lock.acquire()
     driver = webdriver.Firefox()
     driver.get(url)
     html = driver.page_source
     
     soup = BeautifulSoup(html, 'html.parser')
     driver.close()
-    time.sleep(1)
-    lock.release()
 
     return soup
 
@@ -317,10 +314,10 @@ def get_job_ad_data(url_lst, data):
         except:
             continue
 
-        percent = (i+1) / n_urls
+        #percent = (i+1) / n_urls
 
         # Print the progress the "end" arg keeps the message in the same line
-        print("Progress: {:2.0f}%".format(100*percent), end='\r')
+        #print("Progress: {:2.0f}%".format(100*percent), end='\r')
 
     return data, n_urls
 
@@ -355,9 +352,10 @@ def get_data(query, num_pages, location, db_data):
         unique_urls = list(dict.fromkeys(urls))
         logging.getLogger('main.scraping').info('%s in %s: %d unique urls', query, location, len(unique_urls))
 
-        # remove duplicated urls that are already in the database
-        unique_urls[:] = [url for url in unique_urls if url not in db_data['Url']]
-        logging.getLogger('main.scraping').info('%s in %s: %d unique urls not in db', query, location, len(unique_urls))
+        if not db_data.empty:
+            # remove duplicated urls that are already in the database
+            unique_urls[:] = [url for url in unique_urls if url not in db_data['Url']]
+            logging.getLogger('main.scraping').info('%s in %s: %d unique urls not in db', query, location, len(unique_urls))
 
         jobs_df = pd.DataFrame(columns=["Title", "Company", "Salary", "City", "Posting", "Posted_Date", "Url"])
     
@@ -371,7 +369,7 @@ def get_data(query, num_pages, location, db_data):
         file_name = cv.CFG.csv_dir.joinpath(query.replace('+', '_') + '_' + location.lower() + '.csv')
         jobs_df.to_csv(file_name, encoding='utf-8', index=False)
 
-        logging.getLogger('main.scraping').info('%s in %s: %d postings have been  saved !', query, location, jobs_df.shape[0])
+        logging.getLogger('main.scraping').info('%s in %s: %d postings have been saved !', query, location, jobs_df.shape[0])
     else:
         logging.getLogger('main.scraping').warning("Maximum number of pages is only %d. Please try again!", urls)
 
