@@ -9,57 +9,22 @@ Created on Wed Mar 13 10:19:48 2019
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-import cleaning as cl
-
-#%% ################## A suppr d'ici - Sert juste pour tester 'prepro' !
-jobs = ['Data Scientist', 'Developpeur', 'Business Intelligence', 'Data Analyst']
-locations = ['Lyon', 'Paris', 'Toulouse', 'Bordeaux', 'Nantes']
-
-import re
-def importdata(folderpath, jobs, locations):
-    """
-    Return a dataframe with all scrap for every jobs and locations
-    
-    Parameters:
-        folderpath: the location of scrap csv (ex : /scraping)
-        jobs : list of all jobs (ex: jobs = ['Data Scientist', 'Developpeur', 'Business Intelligence', 'Data Analyst'] )
-        locations : list of all location (ex: locations = ['Lyon', 'Paris', 'Toulouse', 'Bordeaux', 'Nantes'])
-    
-    Returns:
-        alldata merged and with no duplicates row
-        
-    Possible warning : 
-        C:\ProgramData\Anaconda3\lib\site-packages\pandas\core\frame.py:6692: FutureWarning: Sorting because non-concatenation axis is not aligned. A future version
-        of pandas will change to not sort by default.
-        To accept the future behavior, pass 'sort=False'.
-        To retain the current behavior and silence the warning, pass 'sort=True'.
-    """
-    try:
-        alldata = pd.DataFrame()
-        for job in jobs:
-            for loc in locations:
-                filepath = folderpath + '/' + job.lower().replace(' ','_') + '_' + loc.lower() + '.csv'
-                temp = pd.read_csv(filepath, encoding='utf-8')
-                alldata = alldata.append(temp, ignore_index=True)
-    except:
-        pass
-    alldata.drop_duplicates(inplace=True)
-    alldata.drop('Unnamed: 0', axis=1, inplace=True)
-      
-    return alldata
+import rdmmp.cleaning
+import rdmmp.db
+import rdmmp.misc as misc
 
 #%% ################## A suppr d'ici - Sert juste pour tester 'prepro' !
 #if __name__ == "__main__":
 def data_read():        
-    import cleaning as cl
     #from sklearn.preprocessing import Imputer
-    data = importdata('C:\Formation\Simplon-Dev_Data_IA\ML\Projet_groupe_Boris\Data_csv', jobs, locations)
+    misc.CFG.read_ini()
+    data = rdmmp.db.import_data()#'C:\Formation\Simplon-Dev_Data_IA\ML\Projet_groupe_Boris\Data_csv', jobs, locations)
     #data = cl.clean_salary(data)
     #data = cl.clean_job(data)
     #data = cl.clean_city(data)
     #data = cl.clean_posting(data)
     
-    df = cl.clean(data)
+    df = rdmmp.cleaning.clean(data)
     #df = pd.concat([df, data['Company']], axis=1)
     return df
 
@@ -111,7 +76,7 @@ def check_cols_X_names(df, col_y, cols_X=None):
     param :
         df : DF with, at least, the columns needed for X and y \n
         col_y : String,  name of the column y \n
-        cols_X=None : If None, cols_X will be deduced, else List of String, which will be checked
+        cols_X=None : If None, cols_X will be deduced, else List of Strings, which will be checked
         
     return : List of Strings with the correct names of X (cols_X)
     '''
@@ -140,7 +105,7 @@ def Check_Cols(df, col_y, cols_X=None):
     param :
         df : DF with, at least, the columns needed for X and y \n
         col_y : String,  name of the column y \n
-        cols_X=None : If None, cols_X will be deduced, else List of String, which will be checked
+        cols_X=None : If None, cols_X will be deduced, else List of Strings, which will be checked
         
     return : Tuple with :
         List of Strings with the correct names of X (cols_X)
@@ -242,7 +207,7 @@ def prepa_1(df, col_y, cols_X=None, delrnanx=True, forpred=False):
 #Check_Cols :
     cols_X, col_y = Check_Cols(df, col_y, cols_X)
     if cols_X == None:
-        return None
+        raise TypeError("pbm with cols_X") ###########################
 #GNX : On supprime les NAN de X :
     if delrnanx:
         df = delr_nan_X(df, cols_X) # Attention avec un autre DF
@@ -256,7 +221,7 @@ def prepa_1(df, col_y, cols_X=None, delrnanx=True, forpred=False):
     
     if forpred:
         X = dn[cols_X]
-        return dn, X
+        return X, dn
     
     # Determine X
     X = df[cols_X]
@@ -365,48 +330,6 @@ def action_X(Xt, drop1=True):
     return X_gd
 
 #%% Preprocessing at the beginning
-def prepro(df, col_y='Salary', cols_X=None, delrnanx=True):
-    '''
-    Preprocessing of a dataset which every columns should be categorical !
-    For remind : For Data supervised, y is needed
-    
-    Parameters:
-        df: The Dataframe which will be preprocessed
-        col_y = String with the y column's name, ie: 'Salary'
-        cols_X=None, List of Strings, names of the columns that should be in X
-            ie:['CleanCity','Company','CleanJob']
-            If cols_X is None : cols_X is deduced (df - col_y)
-        delrnanx=true, if NANs in X should delete the rows
-        
-    Return:
-        DF : X_train, X_test, y_train, y_test
-        dn = DF with the NAN in col_y
-        
-    Warning with the first function of prepa_1 'delr_nan_X' cause NAN in X will delete rows
-    '''
-    #df_orig = df.copy()
-
-    try:
-        X_train, X_test, y_train, y_test, dn, df = prepa_1(df, col_y, cols_X, delrnanx)
-    except TypeError:
-        print('Error, read precedent message, maybe y is in X')
-        return
-    Final_X_train = action_X(X_train)
-    Final_X_test = action_X(X_test)
-    if not isinstance(Final_X_train, pd.DataFrame):
-        return print("Error: process stopped cause X_train is not df")
-    if not isinstance(Final_X_test, pd.DataFrame):
-        return print("Error: process stopped cause X_test is not df")
-    
-    add_missing_cols(Final_X_train, Final_X_test)
-        
-        
-    # Pour reformer le df et virer les nan de y
-    #ndf = pd.concat([X, y], axis=1)
-    
-    
-    return Final_X_train, Final_X_test, y_train, y_test, dn, df
-
 # Preprocessing for pred
 def prepro_pred(dn, col_y='Salary', cols_X=None, delrnanx=True):
     '''
@@ -428,17 +351,65 @@ def prepro_pred(dn, col_y='Salary', cols_X=None, delrnanx=True):
     '''
     forpred=True
     if not isinstance(dn, pd.DataFrame):
-        return print("Error: process stopped cause dn is not a DF")
-    try:
-        dn, X = prepa_1(dn, col_y, cols_X, delrnanx, forpred)
-    except TypeError:
-        print('Error, read precedent message, maybe y is in X')
-        return
+        raise TypeError("Error: process stopped cause dn is not a DF")###################
+    
+
+    X, dn = prepa_1(dn, col_y, cols_X, delrnanx, forpred)
+#    raise TypeError('Error, read precedent message, maybe y is in X')
     
     
-    Final_X_pred = action_X(X)    
     
-    return Final_X_pred, dn
+    X_pred_gd = action_X(X)
+    
+    return X_pred_gd, dn
+
+
+def prepro(df, col_y='Salary', cols_X=None, delrnanx=True):
+    '''
+    Preprocessing of a dataset which every columns should be categorical !
+    For remind : For Data supervised, y is needed
+    
+    Parameters:
+        df: The Dataframe which will be preprocessed
+        col_y = String with the y column's name, ie: 'Salary'
+        cols_X=None, List of Strings, names of the columns that should be in X
+            ie:['CleanCity','Company','CleanJob']
+            If cols_X is None : cols_X is deduced (df - col_y)
+        delrnanx=true, if NANs in X should delete the rows
+        
+    Return:
+        DF : X_train, X_test, y_train, y_test
+        dn = DF with the NAN in col_y
+        
+    Warning with the first function of prepa_1 'delr_nan_X' cause NAN in X will delete rows
+    '''
+    #df_orig = df.copy()
+
+    X_train, X_test, y_train, y_test, dn, df = prepa_1(df, col_y, cols_X, delrnanx)
+
+    X_train_gd = action_X(X_train)
+    X_test_gd = action_X(X_test)
+    if not isinstance(X_train_gd, pd.DataFrame):
+        raise TypeError("Error: process stopped cause X_train is not df")
+    if not isinstance(X_test_gd, pd.DataFrame):
+        raise TypeError("Error: process stopped cause X_test is not df")
+    
+    add_missing_cols(X_train_gd, X_test_gd)
+    
+    if not dn.empty:
+        X_pred_gd, dn = prepro_pred(dn, col_y, cols_X)
+        if set(X_pred_gd.columns) != set(X_train_gd.columns):
+            print('Some categorical values does not match with a Salary and so had been deleted')
+            pdst, tdsp = double_search_missing_col(X_pred_gd, X_train_gd)
+            for i in pdst:
+                del X_pred_gd[i]
+            if not not tdsp:
+                for j in tdsp:
+                    print('Careful the feature %s will be deleted from the train and test' %j)
+                    del X_train_gd[j]; del X_test_gd[j]
+    else: X_pred_gd = pd.DataFrame()
+    
+    return X_train_gd, X_test_gd, y_train, y_test, X_pred_gd, dn, df
 
 #%% Pour modifier les parametres
 if __name__ == "__main__":
@@ -447,7 +418,7 @@ if __name__ == "__main__":
     col_y = 'Salary'
     cols_X = ['City','Job']
     
-    Final_X_train, Final_X_test, y_train, y_test, dn, df = prepro(df, col_y)#, cols_X)
+    Final_X_train, Final_X_test, y_train, y_test, X_pred, dn, df = prepro(df, col_y, cols_X)
 
 
 ################################################################################
