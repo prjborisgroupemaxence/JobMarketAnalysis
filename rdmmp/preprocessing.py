@@ -411,8 +411,6 @@ def prepro(df, col_y='Salary', cols_X=None, delrnanx=True):
     
     return X_train_gd, X_test_gd, y_train, y_test, X_pred_gd, dn, df
 
-    return Final_X_train, Final_X_test, y_train, y_test, dn#, df
-
 
 #%% Pour modifier les parametres
 if __name__ == "__main__":
