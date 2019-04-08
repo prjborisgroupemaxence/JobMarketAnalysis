@@ -314,6 +314,7 @@ def action_X(Xt, drop1=True):
     '''
     GetDummies(GD), with drop_first by default, on pd.DataFrame with ONLY categorical \n
     param: DF with X columns (not y) to be GD, ONLY categorical columns ! \n
+        drop1: Boolean, True if GD with drop_first
     return: new DF converted by get_dummies
         return None if problem
     
@@ -322,7 +323,7 @@ def action_X(Xt, drop1=True):
     # Ready for getdummies via multidum(X) with a categorical Xt
     if not isinstance(Xt, pd.DataFrame): return print("Parameter Xt should be pd.DataFrame")
     else:
-        X_gd = pd.get_dummies(Xt)
+        X_gd = pd.get_dummies(Xt, drop_first=drop1)
         # Deletion column named NAN if exists
         if 'nan' in X_gd.columns:
             X_gd = X_gd.drop(['nan'], axis=1)
