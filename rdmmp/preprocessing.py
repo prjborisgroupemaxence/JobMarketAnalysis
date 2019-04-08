@@ -9,12 +9,12 @@ Created on Wed Mar 13 10:19:48 2019
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+<<<<<<< HEAD
 import rdmmp.cleaning
 import rdmmp.db
 import rdmmp.misc as misc
+=======
 
-#%% ################## A suppr d'ici - Sert juste pour tester 'prepro' !
-#if __name__ == "__main__":
 def data_read():        
     #from sklearn.preprocessing import Imputer
     misc.CFG.read_ini()
@@ -410,6 +410,9 @@ def prepro(df, col_y='Salary', cols_X=None, delrnanx=True):
     else: X_pred_gd = pd.DataFrame()
     
     return X_train_gd, X_test_gd, y_train, y_test, X_pred_gd, dn, df
+
+    return Final_X_train, Final_X_test, y_train, y_test, dn#, df
+
 
 #%% Pour modifier les parametres
 if __name__ == "__main__":
