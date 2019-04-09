@@ -9,6 +9,7 @@ Python script file for miscellaneous general functions
 """
 
 import os
+import logging
 import configparser
 from pathlib import Path
 
@@ -82,6 +83,8 @@ class ConfigValues:
         # check if the ini file exists and create a default one if not
         ini_file = self.script_dir.joinpath(INI_FILE)
         if not ini_file.exists():
+            log = logging.getLogger('main.cv')
+            log.warning('The ini file doesn\'t exist: some features won\'t work without manual initialization...')
             self.create_default_ini()
 
         # read the ini
@@ -114,12 +117,16 @@ class ConfigValues:
         """
         Checks if the csv_dir and report_dir folders exist and create them if not
         """
+        log = logging.getLogger('main.cv')
+        
         # check if csv_dir exist and create it if not
         if not self.csv_dir.exists():
+            log.info('Create CSV dir')
             os.makedirs(self.csv_dir)
 
-        # check if csv_dir exist and create it if not
+        # check if report_dir exist and create it if not
         if not self.report_dir.exists():
+            log.info('Create Report dir')
             os.makedirs(self.report_dir)
         
         # check if graph_dir exist and create it if not

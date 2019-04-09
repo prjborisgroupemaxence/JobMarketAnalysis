@@ -9,11 +9,7 @@ Created on Wed Mar 13 10:19:48 2019
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-<<<<<<< HEAD
-import rdmmp.cleaning
-import rdmmp.db
-import rdmmp.misc as misc
-=======
+
 
 def data_read():        
     #from sklearn.preprocessing import Imputer

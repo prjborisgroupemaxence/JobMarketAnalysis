@@ -8,8 +8,12 @@ Code to clean the dataframe, to get useful data from posting column
 @authors: Radia, David, Martial, Maxence, Philippe B
 """
 import re
+
 import pandas as pd
 import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
+import nltk
+from nltk.corpus import stopwords
 
 
 # Start by cleaning the job title column
@@ -29,7 +33,25 @@ def clean_job(data, jobtitle=['Data Analyst', 'Data Scientist', 'Junior',
     Returns:
         data : a dataframe with a new clean column title
     """
-
+#    data['CleanJob'] = data['Job_Category']
+#    data['Junior'] = data['Title'].str.contains('Junior', case=False, regex=False)
+#    data['Senior'] = data['Title'].str.contains('Senior', case=False, regex=False)
+#    data['Stage'] = data['Title'].str.contains('Stage', case=False, regex=False)
+#    data['Business Analyst'] = data['Title'].str.contains('Business Analyst', case=False, regex=False)
+#    data['Data Engineer'] = data['Title'].str.contains('Data Engineer', case=False, regex=False)
+#    data['Ingénieur Data'] = data['Title'].str.contains('Ingénieur Data', case=False, regex=False)
+#    data['Alternance'] = data['Title'].str.contains('Alternance', case=False, regex=False)
+#    
+#    nltk.download('stopwords')
+#    set_stop_words = set(stopwords.words("french"))
+#    
+#    cv = CountVectorizer(stop_words=set_stop_words, ngram_range=(1, 3), min_df = 0.1)
+#    cv.fit(data['Title'])
+#    X_title_trans = pd.DataFrame(cv.transform(data['Title']).todense(), columns=cv.get_feature_names())
+#    
+#    return X_title_trans
+#    
+    
     rownan = []
     data['CleanJob'] = ""  # Create new column
 
@@ -177,7 +199,14 @@ def clean_posting(data):
             (Named CleanPosting)
 
     """
-    return data
+    nltk.download('stopwords')
+    set_stop_words = set(stopwords.words("french"))
+    
+    cv = CountVectorizer(stop_words=set_stop_words, ngram_range=(1, 3), min_df = 0.1)
+    cv.fit(data['Posting'])
+    X_title_trans = pd.DataFrame(cv.transform(data['Posting']).todense(), columns=cv.get_feature_names())
+
+    return X_title_trans
 
 
 # Call all cleaner function
@@ -195,9 +224,22 @@ def clean(data):
     data_clean_job = clean_job(data)
     data_clean_city = clean_city(data)
     data_clean_salary = clean_salary(data)
+    
+    
     # data_clean_posting = clean_posting(data)
     data_clean = pd.concat([data_clean_job['CleanJob'],
                             data_clean_city['CleanCity'],
                             data_clean_salary['CleanSalary']], axis=1,
                            keys=['Job', 'City', 'Salary'])
     return data_clean
+    
+#    data_clean_posting = clean_posting(data)
+#    data_clean = pd.concat([data,
+#                            data_clean_job,
+#                            data_clean_posting
+#                            ], axis=1)
+#    
+#    cleaned_data = data_clean.drop(['City', 'Company', 'Job_Category', 'Location_Category', 'Posted_Date', 'Posting', 'Salary', 'Title', 'Url'], axis=1)
+#    cleaned_data.rename(columns={'CleanJob':'Job', 'CleanCity':'City', 'CleanSalary':'Salary'}, inplace=True)
+#
+#    return cleaned_data

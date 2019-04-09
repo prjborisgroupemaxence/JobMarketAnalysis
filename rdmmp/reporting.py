@@ -33,9 +33,8 @@ import pylab
 
 from pylab import title, figure, xlabel, ylabel, xticks, bar, legend, axis, savefig
 from fpdf import FPDF
-from custompdf import FPDF
 
-import rdmmp.misc as misc
+import rdmmp.configvalues as cv
 
 
 # %% Create the report
@@ -83,6 +82,7 @@ def create_report(dataframe):
     plt.title('salaire_rbf')
     
     plt.savefig('D:/Dev/Prj/JobMarketAnalysis/Graph/salaire_rbf_BoxPlot.png')
+    plt.show()
     
     data = dataframe['salaire_forest'].dropna()
     plt.boxplot(data, sym='')
@@ -91,6 +91,7 @@ def create_report(dataframe):
     plt.title('salaire_forest')
     
     plt.savefig('D:/Dev/Prj/JobMarketAnalysis/Graph/salaire_forest_BoxPlot.png')
+    plt.show()
     
     df = pd.DataFrame()
     df['Question'] = ["Q1", "Q2", "Q3", "Q4"]
@@ -173,13 +174,12 @@ for i in range(1, 41):
 pdf.output('tuto2.pdf', 'F')
 """   
     
-create_report()
     
 # %% Send the report
 
 
 # email source
-FROM = 'Groupe Maxence', misc.CFG.email
+FROM = 'Groupe Maxence', cv.CFG.email
 # email subject, will date later in the code
 SUBJECT = 'Dev & data job market analysis – '
 # email destination
@@ -360,7 +360,7 @@ def send_report():
     # Go through the list of files/folders
     for path in FILE_PATHS:
         # Create the attachment and attach it to the message
-        mime, handle = create_attachment(misc.CFG.report_dir.joinpath(path))
+        mime, handle = create_attachment(cv.CFG.report_dir.joinpath(path))
         message.attach(mime)
 
     # Attach the plain, non-html message
@@ -373,7 +373,7 @@ def send_report():
     with smtplib.SMTP('smtp.gmail.com', 587) as server:
         # Log in
         server.starttls()
-        server.login(misc.CFG.smtp_user, misc.CFG.smtp_pwd)
+        server.login(cv.CFG.smtp_user, cv.CFG.smtp_pwd)
 
         # Send the message
         server.send_message(message)
