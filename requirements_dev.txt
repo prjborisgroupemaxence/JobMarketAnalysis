@@ -1,0 +1,7 @@
+pip
+pymongo
+numpy
+pandas
+bs4
+selenium
+fpdf

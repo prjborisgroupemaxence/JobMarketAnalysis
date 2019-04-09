@@ -28,6 +28,8 @@ import zipfile
 import datetime
 import pandas as pd
 import matplotlib
+import matplotlib.pyplot as plt
+import pylab
 
 from pylab import title, figure, xlabel, ylabel, xticks, bar, legend, axis, savefig
 from fpdf import FPDF
@@ -42,8 +44,8 @@ class PDF(FPDF):
     
     def header(self):
         # Logo
-        self.image('logo/ecole-ia-logo.png', 0, 0, 33)
-        self.image('logo/simplon-logo.png', 175, 7, 33)        
+        self.image('rdmmp/logo/ecole-ia-logo.png', 0, 0, 33)
+        self.image('rdmmp/logo/simplon-logo.png', 175, 7, 33)        
         # Arial bold 15
         self.set_font('Arial', 'B', 20)
         # Move to the right (8cm to the right)
@@ -68,11 +70,27 @@ class PDF(FPDF):
         self.cell(0, 0, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, align='R')
         
 
-def create_report():
+def create_report(dataframe):
     """
     Create a pdf report named Job Market Analysis.pdf in the folder Report
 
     """
+    data = dataframe['salaire_rbf'].dropna()
+    plt.boxplot(data, sym='')
+
+    #plt.xlim(data.min()-10000, data.max()+10000)
+    plt.title('salaire_rbf')
+    
+    plt.savefig('D:/Dev/Prj/JobMarketAnalysis/Graph/salaire_rbf_BoxPlot.png')
+    
+    data = dataframe['salaire_forest'].dropna()
+    plt.boxplot(data, sym='')
+
+    #plt.xlim(data.min()-10000, data.max()+10000)
+    plt.title('salaire_forest')
+    
+    plt.savefig('D:/Dev/Prj/JobMarketAnalysis/Graph/salaire_forest_BoxPlot.png')
+    
     df = pd.DataFrame()
     df['Question'] = ["Q1", "Q2", "Q3", "Q4"]
     df['Charles'] = [3, 4, 5, 3]
@@ -92,10 +110,34 @@ def create_report():
     
     legend()
     axis([0, 10, 0, 8])
-    savefig('graph/barchart.png')
+    savefig(cv.CFG.graph_dir.joinpath('barchart.png'))
+    
+    
+    
+#    data_01 = [1,2,3,4,5,6,7,8,9]
+#    data_02 = [15,16,17,18,19,20,21,22,23,24,25]
+#    data_03 = [5,6,7,8,9,10,11,12,13]
+#    
+#    BoxName = ['data 01','data 02','data 03']
+#    
+#    data = [data_01,data_02,data_03]
+#    
+#    plt.boxplot(data)
+#    
+#    plt.ylim(0,30)
+#    
+#    pylab.xticks([1,2,3], BoxName)
+#    
+#    plt.savefig('D:/Dev/Prj/JobMarketAnalysis/Graph/MultipleBoxPlot02.png')
+ 
+ 
     
     pdf = PDF()
     pdf.alias_nb_pages()
+    pdf.add_page()
+    pdf.image('D:/Dev/Prj/JobMarketAnalysis/Graph/salaire_rbf_BoxPlot.png', x = None, y = None, w = 0, h = 0, type = '', link = '')
+    pdf.image('D:/Dev/Prj/JobMarketAnalysis/Graph/salaire_forest_BoxPlot.png', x = None, y = None, w = 0, h = 0, type = '', link = '')
+    
     pdf.add_page()
     #pdf.set_xy(0, 0)
     pdf.set_font('arial', 'B', 12)
@@ -115,8 +157,8 @@ def create_report():
         pdf.cell(-90)
     pdf.cell(90, 10, " ", 0, 2, 'C')
     pdf.cell(-30)
-    pdf.image('graph/barchart.png', x = None, y = None, w = 0, h = 0, type = '', link = '')
-    pdf.output('Report/test.pdf', 'F')
+    pdf.image('D:/Dev/Prj/JobMarketAnalysis/Graph/barchart.png', x = None, y = None, w = 0, h = 0, type = '', link = '')
+    pdf.output(cv.CFG.report_dir.joinpath('Job Market Analysis.pdf'), 'F')
     
          
 """
@@ -335,13 +377,13 @@ def send_report():
         server.send_message(message)
 
 
-def report(data_krbf, data_rf):
+def report(dataframe):
     """
     'Main' function of the module, starting point to create and send a report on the job market.
 
     Args:
         jobs_df: Dataframe of jobs postings.
     """
-    create_report()
+    create_report(dataframe)
 
     send_report()

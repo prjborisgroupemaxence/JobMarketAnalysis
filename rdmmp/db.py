@@ -107,21 +107,3 @@ def load_df(db_name, collection_name):
     logging.getLogger('main.db').info('Load_df: %.3fs', duration)
 
     return data
-
-# %%
-
-
-def update(data_krbf, data_rf):
-    """
-    This is an example of Google style.
-
-    Args:
-        param1: This is the first param.
-        param2: This is a second param.
-
-    Returns:
-        This is a description of what is returned.
-
-    Raises:
-        KeyError: Raises an exception.
-    """

@@ -5,9 +5,6 @@
 .spyproject/
 __pycache__/
 
-# Packages to install
-requirements_dev.txt
-
 # Folders with temporary working files
 csv*/
 report/

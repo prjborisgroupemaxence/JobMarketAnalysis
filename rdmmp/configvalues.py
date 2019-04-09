@@ -19,6 +19,7 @@ INI_FILE = 'JobMarketAnalysis.ini'
 FOLDERS_SECTION = 'FOLDERS'
 SCRAPING_OUTPUT_VALUE = 'Scraping Output'
 REPORTING_INPUT_VALUE = 'Reporting Input'
+GRAPH_VALUE = 'Graph'
 
 TARGETS_SECTION = 'TARGETS'
 JOBS_VALUE = 'Jobs'
@@ -45,6 +46,7 @@ class ConfigValues:
         self.script_dir = Path(__file__).parents[1]
         self.csv_dir = Path()
         self.report_dir = Path()
+        self.graph_dir = Path()
         self.targets = []
         self.locations = []
         self.email = ''
@@ -57,7 +59,7 @@ class ConfigValues:
         """
         config = configparser.ConfigParser()
 
-        config[FOLDERS_SECTION] = {SCRAPING_OUTPUT_VALUE: 'CSV', REPORTING_INPUT_VALUE: 'Report'}
+        config[FOLDERS_SECTION] = {SCRAPING_OUTPUT_VALUE: 'CSV', REPORTING_INPUT_VALUE: 'Report', GRAPH_VALUE: 'Graph'}
 
         config[TARGETS_SECTION] = {}
         config[TARGETS_SECTION][JOBS_VALUE] = '\nData Scientist\nData Analyst\nBusiness Intelligence\nDeveloppeur'
@@ -95,6 +97,9 @@ class ConfigValues:
 
         dir_name = config[FOLDERS_SECTION][REPORTING_INPUT_VALUE]
         self.report_dir = Path(self.script_dir.joinpath(dir_name))
+        
+        dir_name = config[FOLDERS_SECTION][GRAPH_VALUE]
+        self.graph_dir = Path(self.script_dir.joinpath(dir_name))
 
         # TARGETS
         targets = config[TARGETS_SECTION][JOBS_VALUE].splitlines()
@@ -123,6 +128,11 @@ class ConfigValues:
         if not self.report_dir.exists():
             log.info('Create Report dir')
             os.makedirs(self.report_dir)
+        
+        # check if graph_dir exist and create it if not
+        if not self.graph_dir.exists():
+            log.info('Create Graph dir')
+            os.makedirs(self.graph_dir)
 
 # %%
 

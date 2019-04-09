@@ -11,6 +11,7 @@ import logging
 import time
 
 import pandas as pd
+import numpy as np
 
 import rdmmp.scraping as scraping
 import rdmmp.db as db
@@ -174,7 +175,8 @@ def pre_processing(data):
     log.info("****************************************")
     log.info("*** pre_process")
     log.info("****************************************")
-    return preprocessing.prepro(data)
+    return preprocessing.preprocess(data)
+    #return preprocessing.prepro(data)
 
 # %% DoModel
 
@@ -197,7 +199,7 @@ def make_model(x_train, x_test, y_train, y_test, dnan):
 # %% UpdateDB
 
 
-def update_db(data_krbf, data_rf):
+def update_db(dataframe, data_krbf, data_forest):
     """
     Save the data in the DB
 
@@ -210,12 +212,29 @@ def update_db(data_krbf, data_rf):
     log.info("****************************************")
     log.info("*** update_db")
     log.info("****************************************")
-    db.update(data_krbf, data_rf)
+
+    krbd_df = pd.DataFrame(index=dataframe.index)
+    krbd_df['salaire_rbf'] = np.nan
+
+    for idx, row in data_krbf.iterrows():
+        krbd_df.loc[idx, 'salaire_rbf'] = row[0]
+
+    rf_df = pd.DataFrame(index=dataframe.index)
+    rf_df['salaire_forest'] = np.nan
+
+    for idx, row in data_forest.iterrows():
+        rf_df.loc[idx, 'salaire_forest'] = row[0]
+
+    dataframe = pd.concat([dataframe, krbd_df, rf_df], axis=1)
+
+    db.save_df(dataframe, 'TEMP_BASE', 'MODEL_DATA')
+    
+    return dataframe
 
 # %% Report
 
 
-def make_report(data_krbf, data_rf):
+def make_report(dataframe):
     """
     Create a report and send it by email
 
@@ -228,7 +247,7 @@ def make_report(data_krbf, data_rf):
     log.info("****************************************")
     log.info("*** make_report")
     log.info("****************************************")
-    reporting.report(data_krbf, data_rf)
+    reporting.report(dataframe)
 
 # %% Command line options
 
@@ -362,11 +381,11 @@ def main():
 
     if update:
         # Update DB with results from models
-        update_db(predict_krbf, predict_rf)
+        predict_df = update_db(jobs_df, predict_krbf, predict_rf)
 
     if report:
         # Create and send report
-        make_report(predict_krbf, predict_rf)
+        make_report(predict_df)
 
     log.info("")
     log.info("================================================================================")
