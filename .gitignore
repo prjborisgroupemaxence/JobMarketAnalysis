@@ -10,7 +10,11 @@ csv*/
 report/
 graph/
 
-# Log from scraping 
+# Folders with old files saved just in case
+backup
+
+# Logs
+logfile.log
 geckodriver.log
 
 # INI Files
@@ -27,4 +31,7 @@ Notes.txt
 # MSTest test Results
 #[Tt]est[Rr]esult*/
 #[Bb]uild[Ll]og.*
+
+# Test files
 rdmmp/test.py
+test.py
