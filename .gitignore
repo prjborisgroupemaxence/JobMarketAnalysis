@@ -8,6 +8,7 @@ __pycache__/
 # Folders with temporary working files
 csv*/
 report/
+graph/
 
 # Folders with old files saved just in case
 backup
