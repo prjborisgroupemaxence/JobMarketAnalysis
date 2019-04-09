@@ -7,100 +7,65 @@ Code to get data from CSVs and the mongo database and to update it after the mod
 
 @authors: Radia, David, Martial, Maxence, Philippe B
 """
-import timeit
-import logging
 
 import pandas as pd
-import pymongo
+import numpy as np
+
+import rdmmp.misc as misc
 
 
-# %% Helper functions
-
-
-#Pour alleger la memoire lors de l'insertion dans la bdd
-def slice_generator(df, chunk_size=2):
-    current_row = 0
-    total_rows = df.shape[0]
-    while current_row < total_rows:
-        yield df[current_row:current_row + chunk_size]
-        current_row += chunk_size
-
-def inser_light(df, mycoll):
-    xids = []
-    for df_chunk in slice_generator(df):
-        records = df_chunk.to_dict(orient='records')
-        inser_many = mycoll.insert_many(records)
-        xids.append(inser_many.inserted_ids)
-    return inser_many, xids
-
-# %% Save a dataframe to a mongoDB collection
-
-
-def save_df(dataframe, db_name, collection_name):
+def update(data_krbf, data_rf):
     """
-    Connect to a MongoDB client, get the db, delete the collection, then save the new data in the collection
+    This is an example of Google style.
 
     Args:
-        dataframe: Dataframe to save
-        db_name: Name of the database
-        collection_name: Collection to save the data in
-    """
-    # Saving starting time
-    time_start = timeit.default_timer()
-
-    conn_mdb_str = 'mongodb://localhost:27017/'
-
-    # creation d'une instance mongo
-    myclient = pymongo.MongoClient(conn_mdb_str)
-    # creation de la db
-    mydb = myclient[db_name]
-
-    # Suppression d'une collection
-    # au cas où elle existe
-    mydb.drop_collection(collection_name)
-
-    # creation de la collection
-    mycollec = mydb[collection_name]
-    docs, docids = inser_light(dataframe, mycollec)
-    
-    # Get the duration of the code above
-    duration = timeit.default_timer() - time_start
-    # Log it
-    logging.getLogger('main.db').info('Save_df: %.3fs', duration)
-
-# %% Load data from a mongoDB collection
-
-
-def load_df(db_name, collection_name):
-    """
-    Connect to a MongoDB client, get the db, get the collection, load the data in the collection in a dataframe
-
-    Args:
-        db_name: Name of the database
-        collection_name: Collection to read the data from
+        param1: This is the first param.
+        param2: This is a second param.
 
     Returns:
-        a dataframe of the data in the collection
+        This is a description of what is returned.
+
+    Raises:
+        KeyError: Raises an exception.
     """
-    # Saving starting time
-    time_start = timeit.default_timer()
-    
-    conn_mdb_str = 'mongodb://localhost:27017/'
 
-    # creation d'une instance mongo
-    myclient = pymongo.MongoClient(conn_mdb_str)
-    # creation de la db
-    mydb = myclient[db_name]
-    # creation de la collection
-    mycollec = mydb[collection_name]
 
-    # Pour voir les documents
-    data = mydb.data
-    data = pd.DataFrame(list(mycollec.find()))
-    
-    # Drop the _id column mongoDB automatically added
-    data.drop('_id', axis=1, inplace=True)
-    
+def import_data_from_csv(folderpath, jobs, locations):
+    """
+    Return a dataframe with all scrap for every jobs and locations
+
+    Parameters:
+        folderpath: the location of scrap csv (ex : /scraping)
+        jobs : list of all jobs (ex: jobs = ['Data Scientist', 'Developpeur', 'Business Intelligence', 'Data Analyst'] )
+        locations : list of all location (ex: locations = ['Lyon', 'Paris', 'Toulouse', 'Bordeaux', 'Nantes'])
+
+    Returns:
+        alldata merged and with no duplicate rows
+    """
+
+    alldata = pd.DataFrame()
+    for job in jobs:
+        for loc in locations:
+            # version temporaire pour récupérer tous les fichiers scrapés
+            # bon code en commentaire après
+            for i in range(2):
+                if i == 0:
+                    filepath = folderpath.joinpath(job.lower().replace(
+                        ' ', '_') + '_' + loc.lower() + '.csv')
+                else:
+                    filepath = folderpath.joinpath(job.lower().replace(
+                        ' ', '_') + '_' + loc.lower() + str(i) + '.csv')
+
+                try:
+                    temp = pd.read_csv(filepath, encoding='utf-8')
+
+                    # backward compatibility :
+                    if temp.shape[1] == 8:
+                        temp.drop(temp.columns[0], axis=1, inplace=True)
+
+                    temp['Job_Category'] = job
+                    temp['Location_Category'] = loc
+
     # Get the duration of the code above
     duration = timeit.default_timer() - time_start
     # Log it

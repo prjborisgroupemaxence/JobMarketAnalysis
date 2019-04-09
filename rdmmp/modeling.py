@@ -13,7 +13,8 @@ import numpy as np
 from sklearn.svm import SVR
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
-
+from sklearn.metrics import mean_squared_log_error, r2_score
+#import rdmmp.preprocessing as ppg
 
 # %% Random Forest
 
@@ -130,34 +131,70 @@ def gridperf(X_train_scaled, X_test_scaled, y_train, y_test, C_range = np.logspa
     clfk.fit(X_train_scaled, y_train)
     #y_pred = clfk.predict(X_test_scaled)
     the_score = clfk.score(X_test_scaled,y_test)
-    return clfk, the_score
+    return clfk
     
 # %%
-    
 
-def modelize(X_train, X_test, y_train, y_test, dnan):
+def modelize(X_train, X_test, y_train, y_test, X_pred, dnan):
     """
-    This is an example of Google style.
-
+    Test both model (Kernel RBF & Random Forest), print few scores and return predictions
     Args:
-        param1: This is the first param.
-        param2: This is a second param.
+        param1: X & y train, ...
+        param2: dnan : DF which contains y NAN
 
     Returns:
-        This is a description of what is returned.
+        DF : The predictions of y NAN
 
     Raises:
-        KeyError: Raises an exception.
+        Every value in categorical features should corresponds at least once to a Salary Value
     """
     # Kernel RBF
     # Determiner le df et cols_X
-    obj_svrkrbf, num_score = gridperf(X_train, X_test, y_train, y_test, C_range=[34500], gamma_range=[0.4, 1])
+    obj_svrkrbf = gridperf(X_train, X_test, y_train, y_test, C_range=[28500, 34500], gamma_range=[0.4, 1])
     
-    predictions_svrkrbf = pd.DataFrame(obj_svrkrbf.predict(X_test))
+    pred_test_svrkrbf = pd.DataFrame(obj_svrkrbf.predict(X_test))
     
     # Random Forest
     obj_rf = random_forest(X_train, X_test, y_train, y_test, 100, [50,100,150],[4,8,12], [False], [25,40,120], [2,6,10])
-    predictions_rf = pd.DataFrame(obj_rf.predict(X_test))
+    pred_test_rf = pd.DataFrame(obj_rf.predict(X_test))
+    
+    r2_svrkrbf = r2_score(y_test,pred_test_svrkrbf) # pour le r2
+    r2_obj_rf = r2_score(y_test,pred_test_rf) # pour le r2
+    print('\nr2:', r2_svrkrbf, r2_obj_rf)
+
+    rmsle_svrkrbf = np.sqrt(mean_squared_log_error(y_test,pred_test_svrkrbf))
+    rmsle_obj_rf = np.sqrt(mean_squared_log_error(y_test,pred_test_rf))
+    print('rmsle:', rmsle_svrkrbf, rmsle_obj_rf)
+    ###############
+    
+    ###############
+    predictions_svrkrbf = pd.DataFrame(obj_svrkrbf.predict(X_pred))
+    predictions_rf = pd.DataFrame(obj_rf.predict(X_pred))
+    
+    ###############
     
     return predictions_svrkrbf, predictions_rf
     
+#pred_svrkrbf, pred_rf = modelize(Final_X_train, Final_X_test, y_train, y_test, dn)
+
+    
+
+# Si probleme dans le corps de gridperf, permet de tester a la main :
+'''
+import Projet_groupe_Boris.Projet_Groupe_Prepro_def as pp
+import modeling as md
+import pandas as pd
+import numpy as np
+df = pp.data_read()
+col_y = 'Salary'
+Final_X_train, Final_X_test, y_train, y_test, dn, df = pp.prepro(df, col_y)
+######
+C_range=[28500, 34500]
+gamma_range=[0.4, 1]
+meth_score='r2'
+cvval=3
+X_train_scaled = Final_X_train
+X_train = Final_X_train
+X_test_scaled = Final_X_test
+X_test = Final_X_test
+'''

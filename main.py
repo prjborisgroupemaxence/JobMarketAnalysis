@@ -19,7 +19,7 @@ import rdmmp.cleaning as cleaning
 import rdmmp.preprocessing as preprocessing
 import rdmmp.modeling as modeling
 import rdmmp.reporting as reporting
-import rdmmp.configvalues as cv
+import rdmmp.misc as misc
 
 
 def test():
@@ -37,11 +37,10 @@ def test():
         KeyError: Raises an exception.
     """
 
-
 # %% DoScraping
 
 
-def do_scraping(automatic, db_data):
+def do_scraping(automatic):
     """ Handle the data scraping on Indeed
 
         If not in automatic mode ask for user inputs to let them choose to run the automatic scraping
@@ -51,95 +50,65 @@ def do_scraping(automatic, db_data):
 
     Args:
         automatic: boolean, ask for user inputs if false then scrap, otherwise scrap predefined lists of jobs and locations
-        db_data: dataframe from database
     """
-    log = logging.getLogger('main')
 
-    log.info("")
-    log.info("****************************************")
-    log.info("*** do_scraping")
-    log.info("****************************************")
+    print("\n****************************************")
+    print("*** do_scraping")
+    print("****************************************")
 
     if not automatic:
         # Ask if they want to choose what to scrape
         choose = input("Do you want to choose what to scrape (y/n) ? ")
         if choose in ("y", "Y"):
             # Ask the job and location
-            job = input("Please enter the title to scrape data for: \n").lower()
+            job = input(
+                "Please enter the title to scrape data for: \n").lower()
 
-            location = input("Please enter the location to scrape data for: \n").lower()
+            location = input(
+                "Please enter the location to scrape data for: \n").lower()
 
             # Ask the amount of pages to scrap
             while True:
-                num_pages = input("Please enter the number of pages needed (integer only, negative or 0 for all): \n")
+                num_pages = input(
+                    "Please enter the number of pages needed (integer only, negative or 0 for all): \n")
                 try:
                     num_pages = int(num_pages)
                     break
                 except ValueError:
-                    log.error("Invalid number of pages! Please try again.")
+                    print("Invalid number of pages! Please try again.")
 
             # Scrap inputs
-            log.info("Scraping %s in %s...", job, location)
-            scraping.get_data(job, num_pages, location, db_data)
+            print("\nScraping {} in {}...".format(job, location))
+            scraping.get_data(job, num_pages, location)
         else:
             # answer is n or N or something else
             automatic = True
 
     if automatic:
         # Init job and location lists
-        jobs = cv.CFG.targets
-        locations = cv.CFG.locations
+        jobs = misc.CFG.targets
+        locations = misc.CFG.locations
 
         # Scrap
-        thread_list = []
         for location in locations:
             for job in jobs:
-                log.info("Scraping %s in %s...", job, location)
-
-                thread = scraping.ScrapingThread(job, -1, location, db_data)
-                thread_list.append(thread)
-                thread.start()
-                time.sleep(3)
-
-        for thread in thread_list:
-            thread.join()
-
+                print("\nScraping {} in {}...\n".format(job, location))
+                scraping.get_data(job, -1, location)
 
 # %% GetWorkingData
 
 
-def get_working_data(database_data):
+def get_working_data():
     """
     Combine data from CSV and mongoDB
 
     Returns:
         A pandas dataframe
     """
-    log = logging.getLogger('main')
-
-    log.info("")
-    log.info("****************************************")
-    log.info("*** get_working_data")
-    log.info("****************************************")
-
-    # Get a dataframe from csv files created by the scraping
-    csv_data = scraping.import_data_from_csv(cv.CFG.csv_dir, cv.CFG.targets, cv.CFG.locations)
-
-    log.info('%d rows from database', database_data.shape[0])
-    log.info('%d rows from csv files', csv_data.shape[0])
-
-    # Concat the 2 dataframes
-    dataframe = pd.concat([database_data, csv_data], join='inner')
-
-    # drop duplicates except the first(database)
-    dataframe.drop_duplicates(['Title', 'Company', 'Salary', 'City', 'Posting'], inplace=True)
-
-    # reset index
-    dataframe.reset_index(drop=True, inplace=True)
-
-    log.info('%d rows in the merge', dataframe.shape[0])
-
-    return dataframe
+    print("\n****************************************")
+    print("*** get_working_data")
+    print("****************************************")
+    return db.import_data()
 
 # %% Cleaner
 
@@ -151,12 +120,9 @@ def do_cleaning(data):
     Args:
         data: pandas dataframe to clean
     """
-    log = logging.getLogger('main')
-
-    log.info("")
-    log.info("****************************************")
-    log.info("*** do_cleaning")
-    log.info("****************************************")
+    print("\n****************************************")
+    print("*** do_cleaning")
+    print("****************************************")
     return cleaning.clean(data)
 
 # %% Preprocess
@@ -176,25 +142,22 @@ def pre_processing(data):
     log.info("*** pre_process")
     log.info("****************************************")
     return preprocessing.preprocess(data)
-    #return preprocessing.prepro(data)
+    # return preprocessing.prepro(data)
 
 # %% DoModel
 
 
-def make_model(x_train, x_test, y_train, y_test, dnan):
+def make_model(X_train, X_test, y_train, y_test, dnan):
     """
     Fit the model on the data and predict salary when it's unknown
 
     Args:
         data: pandas dataframe to train and predict our model on
     """
-    log = logging.getLogger('main')
-
-    log.info("")
-    log.info("****************************************")
-    log.info("*** make_model")
-    log.info("****************************************")
-    return modeling.modelize(x_train, x_test, y_train, y_test, dnan)
+    print("\n****************************************")
+    print("*** make_model")
+    print("****************************************")
+    return modeling.modelize(X_train, X_test, y_train, y_test, dnan)
 
 # %% UpdateDB
 
@@ -228,7 +191,7 @@ def update_db(dataframe, data_krbf, data_forest):
     dataframe = pd.concat([dataframe, krbd_df, rf_df], axis=1)
 
     db.save_df(dataframe, 'TEMP_BASE', 'MODEL_DATA')
-    
+
     return dataframe
 
 # %% Report
@@ -249,7 +212,7 @@ def make_report(dataframe):
     log.info("****************************************")
     reporting.report(dataframe)
 
-# %% Command line options
+# %% Code principal
 
 
 def handle_options():
@@ -276,8 +239,7 @@ def handle_options():
     update = True
     report = True
 
-    log = logging.getLogger('main')
-    log.debug(sys.argv)
+    print(sys.argv)
     if sys.argv:
         # there are command line arguments, we must handle them
         for arg in sys.argv:
@@ -290,82 +252,29 @@ def handle_options():
 
     return auto, scrap, working_data, cleaner, pre_process, model, update, report
 
-# %% Log
-
-
-def init_log():
-    """
-    This is an example of Google style.
-
-    Args:
-        param1: This is the first param.
-        param2: This is a second param.
-
-    Returns:
-        This is a description of what is returned.
-
-    Raises:
-        KeyError: Raises an exception.
-    """
-    logger = logging.getLogger('main')
-    logger.setLevel(logging.DEBUG)
-
-    # create file handler which logs even debug messages
-    file_handler = logging.handlers.RotatingFileHandler('logfile.log', maxBytes=1000000, backupCount=3)
-    file_handler.setLevel(logging.DEBUG)
-
-    # create console handler with a higher log level
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-
-    # create formatters and add them to the handlers
-    formatter_f = logging.Formatter('%(asctime)s %(name)-15s %(levelname)-8s %(message)s')
-    formatter_c = logging.Formatter('%(name)-15s: %(levelname)-8s: %(message)s')
-    file_handler.setFormatter(formatter_f)
-    console_handler.setFormatter(formatter_c)
-
-    # add the handlers to the logger
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-
-# %% Main
-
 
 def main():
     """
     Main function
     """
 
-    # Initialize the log system
-    init_log()
-    log = logging.getLogger('main')
-
-    log.info("")
-    log.info("")
-    log.info("================================================================================")
-    log.info("Main Start")
-    log.info("================================================================================")
-
-    # Read config data and check if needed folders exist
-    cv.CFG.read_ini()
-    cv.CFG.ensure_folders_exist()
+    print("================================================================================")
+    print("Main Start")
+    print("================================================================================")
 
     auto, scrap, working_data, cleaner, pre_process, model, update, report = handle_options()
 
-    # Get the previous raw data from database
-    db_data = db.load_df('TEMP_BASE', 'RAW_DATA')
+    # Read config data and check if needed folders exist
+    misc.CFG.read_ini()
+    misc.CFG.ensure_folders_exist()
 
     if scrap:
         # Scrap
-        do_scraping(auto, db_data)
+        do_scraping(auto)
 
     if working_data:
-        # Get a dataframe to work with
-        jobs_df = get_working_data(db_data)
-
-        # Save the new raw data if it changed
-        if jobs_df.shape != db_data.shape:
-            db.save_df(jobs_df, 'TEMP_BASE', 'RAW_DATA')
+        # Get dataframe to work with
+        jobs_df = get_working_data()
 
     if cleaner:
         # Clean
@@ -373,11 +282,12 @@ def main():
 
     if pre_process:
         # Preprocessing
-        x_train, x_test, y_train, y_test, dnan = pre_processing(cleaned_df)
+        X_train, X_test, y_train, y_test, dnan = pre_processing(cleaned_df)
 
     if model:
         # Modelization
-        predict_krbf, predict_rf = make_model(x_train, x_test, y_train, y_test, dnan)
+        predict_krbf, predict_rf = make_model(
+            X_train, X_test, y_train, y_test, dnan)
 
     if update:
         # Update DB with results from models
@@ -387,15 +297,11 @@ def main():
         # Create and send report
         make_report(predict_df)
 
-    log.info("")
-    log.info("================================================================================")
-    log.info("Main End")
-    log.info("================================================================================")
+    print("================================================================================")
+    print("Main End")
+    print("================================================================================")
 
-    # End the logging system
-    logging.shutdown()
-
-# %% Unique starting point of the script
+# %% Point d'entrée unique du script
 
 
 main()

@@ -13,39 +13,37 @@ Otherwise, get_data should be called from the main script file
 
 import re
 from datetime import date, timedelta
-import logging
-from threading import Thread, Lock
-import time
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import pandas as pd
 import numpy as np
+#from pygame import mixer    # pour jouer un son dans python
 
-import rdmmp.configvalues as cv
-
-lock = Lock()
-# %% Thread
+import rdmmp.misc as misc
 
 
-class ScrapingThread(Thread):
+def generate_number_delay():
     """
-    Simple thread class, handling the scraping of num_pages pages for one (job, location) tuple
+    Return a random number following a normal distribution of mean 4 and standard deviation 0.8.
+    This random number must be a time wait between every clic. The goal is to imitate a human.
+
     """
-    def __init__(self, job, num_pages, location, db_data):
-        Thread.__init__(self)
-        self.job = job
-        self.num_pages = num_pages
-        self.location = location
-        self.db_data = db_data
+    mean = 4
+    sigma = 0.8
+    return np.random.normal(mean, sigma, 1)[0]
 
-    def run(self):
-        # Scrap
-        get_data(self.job, self.num_pages, self.location, self.db_data)
 
-# %%
-        
-        
+def play_mp3(sound):
+    """
+    sound :  path of the audio file
+    play the sound
+    """
+#    mixer.init()
+#    mixer.music.load(sound)
+#    mixer.music.play()
+
+
 def get_soup(url):
     """
     Given the url of a page, this function returns the soup object.
@@ -56,15 +54,11 @@ def get_soup(url):
     Returns:
         soup: soup object
     """
-    lock.acquire()
     driver = webdriver.Firefox()
     driver.get(url)
     html = driver.page_source
-    
     soup = BeautifulSoup(html, 'html.parser')
     driver.close()
-    time.sleep(1)
-    lock.release()
 
     return soup
 
@@ -85,10 +79,11 @@ def grab_job_links(soup):
 
     # Loop through all the posting links
     for link in soup.find_all('h2', {'class': 'jobtitle'}):
+        # Since sponsored job postings are represented by "a target" instead of "a href", no need to worry here
         partial_url = link.a.get('href')
         # This is a partial url, we need to attach the prefix
         url = 'https://www.indeed.fr' + partial_url
-        # Add to the list
+        # Make sure this is not a sponsored posting
         urls.append(url)
 
     return urls
@@ -110,10 +105,11 @@ def grab_sponsored_job_links(soup):
 
     # Loop through all the posting links
     for link in soup.find_all('div', {'class': 'jobsearch-SerpJobCard row result clickcard'}):
+        # Since sponsored job postings are represented by "a target" instead of "a href", no need to worry here
         partial_url = link.a.get('href')
         # This is a partial url, we need to attach the prefix
         url = 'https://www.indeed.fr' + partial_url
-        # Add to the list
+        # Make sure this is not a sponsored posting
         sponsored_urls.append(url)
 
     return sponsored_urls
@@ -133,46 +129,41 @@ def get_urls(query, num_pages, location):
         max_pages: maximum number of pages allowed ((when num_pages invalid))
     """
     # We always need the first page
-    base_url = 'https://www.indeed.fr/jobs?q={}&l={}&limit=50'.format(query, location)
+    base_url = 'https://www.indeed.fr/jobs?q={}&l={}'.format(query, location)
     soup = get_soup(base_url)
     urls = grab_job_links(soup)
-    urls += grab_sponsored_job_links(soup)
+    sponsored_urls = grab_sponsored_job_links(soup)
 
     # Get the total number of postings found
     num_found_string = soup.find(id='searchCount').getText().replace(u'\xa0', '').split()
     num_found = int(num_found_string[-2])
-    
-    if num_found > 1000:
-        # problem, too many results, query was not specific enough
-        logging.getLogger('main.scraping').warning('%d results from the simple query => plan B for accuracy', num_found)
-        # Plan B, use the advanced search with more parameters to have less than 1000 results per query (salary, jobtype, age)
-        num_found = 1000
 
     # Limit number of pages to get
-    max_pages = (num_found + 49) // 50
+    max_pages = round(num_found / 10)
     if num_pages > max_pages:
-        num_pages = max_pages
-        logging.getLogger('main.scraping').warning('Asked for too many pages, will return %d pages only', max_pages)
+        print('returning max_pages!!')
+        return max_pages
 
-    if num_pages == -1:
-        # We want all pages here
-        num_pages = max_pages
-
-    if num_pages >= 2:
+    if num_pages >= 2 or num_pages == -1:
         # Start loop from page 2 since page 1 has been dealt with above
-        for i in range(2, num_pages+1):
-            num = (i-1) * 50
+        if num_pages == -1:
+            num_pages = max_pages
 
-            base_url = 'https://www.indeed.fr/jobs?q={}&l={}&limit=50&start={}'.format(query, location, num)
+        for i in range(2, num_pages+1):
+            num = (i-1) * 10
+            base_url = 'https://www.indeed.fr/jobs?q={}&l={}&start={}'.format(query, location, num)
             try:
                 soup = get_soup(base_url)
                 # We always combine the results back to the list
                 urls += grab_job_links(soup)
-                urls += grab_sponsored_job_links(soup)
+                sponsored_urls += grab_sponsored_job_links(soup)
             except:
                 continue
 
-    return urls
+    # Check to ensure the number of urls gotten is correct
+    # assert len(urls) == num_pages * 10, "There are missing job links, check code!"
+
+    return urls, sponsored_urls
 
 
 def get_posting(url):
@@ -325,7 +316,7 @@ def get_job_ad_data(url_lst, data):
     return data, n_urls
 
 
-def get_data(query, num_pages, location, db_data):
+def get_data(query, num_pages, location):
     """
     Get all the job posting data and save in a csv file using below structure:
 
@@ -337,7 +328,6 @@ def get_data(query, num_pages, location, db_data):
         query: Indeed query keyword such as 'Data Scientist'
         num_pages: Number of search results needed, -1 to scrap all pages
         location: location to search for
-        db_data: data from previous scrapings
 
     Returns:
         df: Python dataframe including all posting data
@@ -346,110 +336,48 @@ def get_data(query, num_pages, location, db_data):
     # Convert the queried title to Indeed format
     query = '+'.join(query.lower().split())
 
-    urls = get_urls(query, num_pages, location)
+    urls, sponsored_urls = get_urls(query, num_pages, location)
+
+    jobs_df = pd.DataFrame(columns=["Title", "Company", "Salary", "City", "Posting", "Posted_Date", "Url"])
+    sponsored_df = pd.DataFrame(columns=["Title", "Company", "Salary", "City", "Posting", "Posted_Date", "Url"])
+
     #  Continue only if the requested number of pages is valid (when invalid, a number is returned instead of list)
-    if isinstance(urls, list):    
-        logging.getLogger('main.scraping').info('%s in %s: %d urls', query, location, len(urls))
-
-        # remove duplicates in the list
-        unique_urls = list(dict.fromkeys(urls))
-        logging.getLogger('main.scraping').info('%s in %s: %d unique urls', query, location, len(unique_urls))
-
-        # remove duplicated urls that are already in the database
-        unique_urls[:] = [url for url in unique_urls if url not in db_data['Url']]
-        logging.getLogger('main.scraping').info('%s in %s: %d unique urls not in db', query, location, len(unique_urls))
-
-        jobs_df = pd.DataFrame(columns=["Title", "Company", "Salary", "City", "Posting", "Posted_Date", "Url"])
-    
+    if isinstance(urls, list):
         # Urls
-        jobs_df, num_urls = get_job_ad_data(unique_urls, jobs_df)
-        logging.getLogger('main.scraping').info('%s in %s: %d postings have been scraped !', query, location, num_urls)
-        
-        jobs_df.drop_duplicates(['Title', 'Company', 'Salary', 'City', 'Posting'], inplace=True)
+        jobs_df, num_urls = get_job_ad_data(urls, jobs_df)
+        print('\nAll {} non-sponsored postings have been scraped !'.format(num_urls))
+
+        # Sponsored urls
+        sponsored_df, num_sponsored_urls = get_job_ad_data(sponsored_urls, sponsored_df)
+        print('\nAll {} sponsored postings have been scraped !'.format(num_sponsored_urls))
+
+        # Remove duplicate sponsored postings
+        sponsored_df.drop_duplicates(inplace=True)
+        print('\n{} sponsored postings after removing duplicates !'.format(sponsored_df.shape[0]))
+
+        # Merge les dataframes
+        jobs_df = pd.concat([jobs_df, sponsored_df], ignore_index=True, sort=True)
+
+        # Remove duplicates in the merge
+        jobs_df.drop_duplicates(inplace=True)
+        print('\n{} postings after removing duplicates !'.format(jobs_df.shape[0]))
 
         # Save the dict as csv file
-        file_name = cv.CFG.csv_dir.joinpath(query.replace('+', '_') + '_' + location.lower() + '.csv')
+        file_name = misc.CFG.csv_dir + '/' + query.replace('+', '_') + '_' + location.lower() + '.csv'
         jobs_df.to_csv(file_name, encoding='utf-8', index=False)
 
-        logging.getLogger('main.scraping').info('%s in %s: %d postings have been  saved !', query, location, jobs_df.shape[0])
+        print('All {} postings have been scraped and saved!'.format(jobs_df.shape[0]))
     else:
-        logging.getLogger('main.scraping').warning("Maximum number of pages is only %d. Please try again!", urls)
+        print("Maximum number of pages is only {}. Please try again!".format(urls))
 
     return jobs_df
-
-# %%
-def import_data_from_csv(folderpath, jobs, locations):
-    """
-    Return a dataframe with all scrap for every jobs and locations
-
-    Parameters:
-        folderpath: the location of scrap csv (ex : /scraping)
-        jobs : list of all jobs (ex: jobs = ['Data Scientist', 'Developpeur', 'Business Intelligence', 'Data Analyst'] )
-        locations : list of all location (ex: locations = ['Lyon', 'Paris', 'Toulouse', 'Bordeaux', 'Nantes'])
-
-    Returns:
-        alldata merged and with no duplicate rows
-    """
-
-    alldata = pd.DataFrame(columns=['Title', 'Company', 'Salary', 'City', 'Posting', 'Posted_Date', 'Url', 'Job_Category', 'Location_Category'])
-    for job in jobs:
-        for loc in locations:
-            # version temporaire pour récupérer tous les fichiers scrapés
-            # bon code en commentaire après
-            for i in range(2):
-                if i == 0:
-                    filepath = folderpath.joinpath(job.lower().replace(' ', '_') + '_' + loc.lower() + '.csv')
-                else:
-                    filepath = folderpath.joinpath(job.lower().replace(' ', '_') + '_' + loc.lower() + str(i) + '.csv')
-
-                try:
-                    temp = pd.read_csv(filepath, encoding='utf-8')
-
-                    # backward compatibility :
-                    if temp.shape[1] == 8:
-                        temp.drop(temp.columns[0], axis=1, inplace=True)
-
-                    temp['Job_Category'] = job
-                    temp['Location_Category'] = loc
-
-                    alldata = alldata.append(temp, ignore_index=True)
-                except FileNotFoundError:
-                    logging.getLogger('main.scraping').warning('Error reading %s...', filepath)
-
-#            filepath = folderpath.joinpath(job.lower().replace(' ', '_') + '_' + loc.lower() + '.csv')
-#            try:
-#                temp = pd.read_csv(filepath, encoding='utf-8')
-#
-#                # backward compatibility :
-#                if temp.shape[1] == 8:
-#                    temp.drop(temp.columns[0], axis=1, inplace=True)
-#
-#                alldata = alldata.append(temp, ignore_index=True)
-#            except:
-#                print("Error reading {}...".format(filepath))
-
-    
-    # drop les doublons sur l'ensemble des colonnes
-    alldata.drop_duplicates(['Title', 'Company', 'Salary', 'City', 'Posting'], inplace=True)
-    # drop les lignes où le scraping n'a pas marché (aucune info récupérée mais url ok)
-    index_num = alldata[alldata['Title'].isnull() &
-                        alldata['Company'].isnull() &
-                        alldata['Salary'].isnull() &
-                        alldata['City'].isnull() &
-                        alldata['Posting'].isnull()
-                       ].index
-    alldata.drop(index_num, inplace=True)
-    # reset de l'index
-    alldata.reset_index(drop=True, inplace=True)
-
-    return alldata
 
 # %% Main if used alone
 # If script is run directly, we'll take input from the user
 
 
 if __name__ == "__main__":
-    QUERIES = cv.CFG.targets
+    QUERIES = misc.CFG.targets
 
     while True:
         QUERY = input("Please enter the title to scrape data for: \n").lower()
